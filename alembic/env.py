@@ -4,9 +4,8 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-
 from app.database import Base
-from app.models import *
+from app.models import *   # 👈 very important
 
 target_metadata = Base.metadata
 

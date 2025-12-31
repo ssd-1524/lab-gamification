@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     # Supabase
     SUPABASE_URL: str | None = None
     SUPABASE_ANON_KEY: str | None = None
+    SUPABASE_JWT_SECRET: str | None = None  
 
     class Config:
         env_file = ".env"
