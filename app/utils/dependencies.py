@@ -1,16 +1,9 @@
-from fastapi import Header, HTTPException, status
-from typing import Annotated
-from app.utils.auth import verify_jwt_token
+from __future__ import annotations
+
+from fastapi import Depends
+from app.utils.auth import get_current_user
 
 
-def get_current_user(
-    authorization: Annotated[str, Header(...)],
-) -> dict:
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Authorization header",
-        )
-
-    token = authorization.removeprefix("Bearer ").strip()
-    return verify_jwt_token(token)
+def get_authenticated_user(user: dict = Depends(get_current_user)) -> dict:
+    """Dependency wrapper to inject authenticated Supabase user claims."""
+    return user

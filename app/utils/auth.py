@@ -1,41 +1,63 @@
 from __future__ import annotations
 
-from os import getenv
+from typing import Any, Dict
+import httpx
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import jwt
+from supabase import create_client, Client
 
-from fastapi import Header, HTTPException, status
-from jose import JWTError, jwt
+# Import the settings loader
+from app.config import get_settings
 
-JWT_SECRET = getenv("SUPABASE_JWT_SECRET")
-JWT_ALGORITHM = "HS256"
+# 1. Load settings once
+settings = get_settings()
 
+# 2. Use settings object instead of os.getenv
+SUPABASE_URL = settings.SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY = settings.SUPABASE_SERVICE_ROLE_KEY
 
-def verify_jwt_token(token: str) -> dict:
-    """Verify and decode Supabase JWT."""
+# This check is now redundant if Pydantic has already validated them, 
+# but we can keep it for safety.
+if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+    raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are missing from config.")
+
+JWKS_URL = f"{SUPABASE_URL}/auth/v1/keys"
+security = HTTPBearer(auto_error=True)
+
+# ------------------ Admin Client ------------------ #
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+# ------------------ JWT Verification ------------------ #
+
+async def _get_jwks() -> Dict[str, Any]:
+    """Fetch public keys from Supabase to verify RS256 signatures locally."""
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.get(JWKS_URL)
+        response.raise_for_status()
+        return response.json()
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> Dict[str, Any]:
+    """
+    Validates the Supabase RS256 JWT.
+    Used for protected routes (e.g., /quizzes/today).
+    """
+    token = credentials.credentials
+
     try:
+        jwks = await _get_jwks()
         payload = jwt.decode(
             token,
-            JWT_SECRET,
-            algorithms=[JWT_ALGORITHM],
+            jwks,
+            algorithms=["RS256"],
             audience="authenticated",
+            options={"verify_aud": False},
         )
         return payload
-    except JWTError as exc:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-        ) from exc
-
-
-def get_current_user(authorization: str = Header(...)) -> dict:
-    """
-    FastAPI dependency to get the current authenticated user.
-    Extracts Bearer token from Authorization header.
-    """
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Authorization header",
+            detail="Invalid or expired authentication token.",
         )
-
-    token = authorization.removeprefix("Bearer ").strip()
-    return verify_jwt_token(token)
