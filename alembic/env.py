@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from app.database import Base
-from app.models import *   # 👈 very important
+from app.models import * # noqa
 
 target_metadata = Base.metadata
 

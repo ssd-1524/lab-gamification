@@ -8,7 +8,8 @@ from app.routers import (
     auth,      # The new router we just built
     badges, 
     events, 
-    quizzes, 
+    quizzes,
+    questions, 
     sessions, 
     users, 
     roles,     # For fetching role strings
@@ -48,6 +49,7 @@ app.include_router(events.router)
 app.include_router(sessions.router)
 app.include_router(quizzes.router)
 app.include_router(badges.router)
+app.include_router(questions.router)
 
 # ---------------------------------------------------------
 # Health Check

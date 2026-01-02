@@ -51,3 +51,26 @@ def get_user_points(user_id: str):
     except Exception as e:
         print(f"Error fetching points: {e}")
         return {"total_points": 0, "rank": "Bronze"}
+    
+def log_event(token: str, payload: dict) -> bool:
+    """
+    Sends a gamification / analytics event to backend
+    """
+    try:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+        response = requests.post(
+            f"{API_BASE_URL}/events/",
+            json=payload,
+            headers=headers,
+            timeout=5,
+        )
+
+        return response.status_code == 200
+
+    except Exception as e:
+        print(f"Error logging event: {e}")
+        return False
