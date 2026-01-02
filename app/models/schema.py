@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Enum, ForeignKey, DateTime, Text, CheckConstraint, Integer, JSON
-from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func, text
+from sqlalchemy.sql import func
+from app.models.enum import role_names, question_types, rank_types, point_types, plan_types, location_names
 import uuid
 from app.database import Base
 
@@ -74,7 +74,7 @@ class Role(Base):
     )
 
     role_name = Column(
-        Enum("Viewer", "Operator", "Executive", "Manager", name="role_names",create_type=False ), 
+        role_names,  
         unique=True, 
         nullable=False
     )
@@ -85,7 +85,6 @@ class Question(Base):
     question_id = Column(
         UUID(as_uuid=True), 
         primary_key=True,
-        # server_default=text("generate_uuid()")
         default=uuid.uuid4,
         nullable=False
     )
@@ -107,7 +106,7 @@ class Question(Base):
     question_text = Column(Text, nullable=False)
 
     question_type = Column(
-        Enum("Sugarcane", "Role", "Plan", name="question_types",create_type=False ), 
+        question_types, 
         nullable=False
     )
 
@@ -138,7 +137,7 @@ class PointWallet(Base):
 
     total_points = Column(Integer, nullable=True)
     rank = Column(
-        Enum("Bronze", "Silver", "Gold", "Platinum", name="rank_types",create_type=False), 
+        rank_types, 
         nullable=True
     )
 
@@ -170,7 +169,7 @@ class PointHistory(Base):
     points = Column(Integer, nullable=True)
     
     source = Column(
-        Enum("Quiz", "Streak", "Manual", "Badges", name="point_sources",create_type=False ),
+        point_types,
         nullable=True
     )
 
@@ -193,7 +192,7 @@ class Plan(Base):
     )
 
     plan_type = Column(
-        Enum("Basic", "Prime", "Nexus", name="plan_types",create_type=False ),
+        plan_types,
         nullable=False
     )
 
@@ -210,12 +209,12 @@ class Location(Base):
     plan_id = Column(
         UUID(as_uuid=True), 
         ForeignKey("plans.plan_id"), 
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
     loc_name = Column(
-        Enum("Gautemala", "Nicaragua", "Mexico Panuco", "Mexico El Mante", name="location_names",create_type=False ),
+        location_names,
         nullable=False
     )
 

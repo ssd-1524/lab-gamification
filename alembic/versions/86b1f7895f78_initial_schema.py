@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 30f16deeae47
+Revision ID: 86b1f7895f78
 Revises: 
-Create Date: 2025-12-31 16:14:50.498506
+Create Date: 2025-12-31 18:45:16.925601
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '30f16deeae47'
+revision: str = '86b1f7895f78'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -44,7 +44,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_badges_plan_id'), 'badges', ['plan_id'], unique=False)
     op.create_table('location',
     sa.Column('loc_id', sa.UUID(), nullable=False),
-    sa.Column('plan_id', sa.UUID(), nullable=False),
+    sa.Column('plan_id', sa.UUID(), nullable=True),
     sa.Column('loc_name', sa.Enum('Gautemala', 'Nicaragua', 'Mexico Panuco', 'Mexico El Mante', name='location_names'), nullable=False),
     sa.ForeignKeyConstraint(['plan_id'], ['plans.plan_id'], ),
     sa.PrimaryKeyConstraint('loc_id')
@@ -83,7 +83,7 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('points', sa.Integer(), nullable=True),
-    sa.Column('source', sa.Enum('Quiz', 'Streak', 'Manual', 'Badges', name='point_sources'), nullable=True),
+    sa.Column('source', sa.Enum('Quiz', 'Streak', 'Manual', 'Badges', name='point_types'), nullable=True),
     sa.Column('timestamp', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -92,7 +92,7 @@ def upgrade() -> None:
     op.create_table('pointwallet',
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('total_points', sa.Integer(), nullable=True),
-    sa.Column('rank', sa.Enum('Bronze', 'Silver', 'Gold', 'Platinum', name='rank_types'), nullable=True),
+    sa.Column('rank', sa.Enum('Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', name='rank_types'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
     sa.PrimaryKeyConstraint('user_id')
