@@ -1,89 +1,92 @@
-"""
-Dashboard page for the Stomata Labs gamified frontend.
-Shows points, quick actions, and activity logging.
-"""
-
-from __future__ import annotations
-
 import streamlit as st
+from utils.api_client import get_user_points
 
-from utils.api_client import log_event
+# 1. Page Configuration
+st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
 
-# ---------------------------------------------------------
-# Page setup
-# ---------------------------------------------------------
-st.title("⚡ Operations Dashboard")
-st.markdown(
-    "<p class='neon-subtitle'>Track your performance and earn rewards</p>",
-    unsafe_allow_html=True,
-)
-
-token = st.session_state.get("access_token")
-
-if not token:
-    st.error("You are not authenticated.")
+# 2. Security Check
+if not st.session_state.get("is_authenticated"):
+    st.warning("Please login to access the dashboard.")
+    st.switch_page("streamlit_app.py")
     st.stop()
 
-# ---------------------------------------------------------
-# Layout helpers
-# ---------------------------------------------------------
-def neon_card(title: str, content: str) -> None:
-    """Render a reusable neon card."""
-    st.markdown(
-        f"""
-        <div class="neon-card">
-            <div class="neon-title">{title}</div>
-            <div style="font-size:1.2rem;margin-top:0.5rem;">
-                {content}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# 3. Data Initialization
+user = st.session_state.user
+points_data = get_user_points(user['id'])
 
+# --- REVISED POPUP (COMPATIBLE WITH ALL VERSIONS) ---
+# We check if the flag is True. If so, we display a distinct high-contrast box at the top.
+if st.session_state.get("show_login_popup", False):
+    with st.container(border=True):
+        st.markdown("### 🎯 Daily Training Available")
+        st.write(f"Hello **{user['name']}**! We have new disease detection images for you to review today.")
+        st.write("Would you like to start the quiz now and earn points?")
+        
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            if st.button("🚀 Start Quiz", type="primary", use_container_width=True):
+                st.session_state.show_login_popup = False
+                st.switch_page("pages/quizzes.py")
+        with col2:
+            if st.button("🕒 Maybe Later", use_container_width=True):
+                st.session_state.show_login_popup = False
+                st.rerun()
+    st.divider()
 
-# ---------------------------------------------------------
-# Top Stats Row
-# ---------------------------------------------------------
+# --- MAIN DASHBOARD UI ---
+st.title(f"👋 Welcome, {user['name']}!")
+
+# User Profile Info Bar
+st.info(f"📍 **Location:** {user.get('loc_name', 'Not Assigned')} | 🛠️ **Role:** {user.get('role_name', 'General User')}")
+
+st.divider()
+
+# 4. Key Metrics
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    neon_card("🏆 Total Points", "1,240")
+    st.metric(
+        label="Total Points", 
+        value=f"{points_data.get('total_points', 0)} pts",
+        delta="Lifetime Earnings"
+    )
 
 with col2:
-    neon_card("🔥 Current Streak", "5 days")
+    st.metric(label="Global Rank", value="#--")
 
 with col3:
-    neon_card("🎖 Rank", "Silver")
+    st.metric(
+        label="Current Tier", 
+        value=points_data.get('rank', 'Bronze'),
+        delta="Tier Progress"
+    )
 
-# ---------------------------------------------------------
-# Quick Actions
-# ---------------------------------------------------------
-st.markdown("## 🎯 Quick Actions")
+st.divider()
 
-action_col1, action_col2, action_col3 = st.columns(3)
+# 5. Action Center
+st.subheader("🎯 Active Challenges")
+c1, c2 = st.columns([3, 1])
 
-with action_col1:
-    if st.button("✔ Completed Shift Smoothly"):
-        log_event(token, feature="shift", action="completed_smooth")
-        st.success("Nice work! Event logged.")
+with c1:
+    st.markdown(
+        """
+        ### Sugarcane & Maize Disease Training
+        Your contribution helps improve our detection models. Correctly identifying 
+        diseases like **Red Rot** or **Maize Dwarf Mosaic** earns you points and 
+        helps protect our crops.
+        """
+    )
+    
+with c2:
+    if st.button("Open Training Center", use_container_width=True, type="primary"):
+        st.switch_page("pages/quiz.py")
 
-with action_col2:
-    if st.button("⚠️ Handled Anomaly"):
-        log_event(token, feature="anomaly", action="handled")
-        st.success("Anomaly handling recorded.")
+st.divider()
 
-with action_col3:
-    if st.button("❌ Missed Check"):
-        log_event(token, feature="check", action="missed")
-        st.warning("Missed check logged.")
-
-# ---------------------------------------------------------
-# Activity Section
-# ---------------------------------------------------------
-st.markdown("## 🧠 Activity Feed")
-
-neon_card(
-    "Latest Highlight",
-    "You handled 3 anomalies today. Keep pushing towards Gold rank!",
-)
+# 6. Recent Activity
+st.subheader("📜 Recent Performance")
+st.table([
+    {"Date": "2026-01-02", "Activity": "Daily Login", "Points": "+5"},
+    {"Date": "2026-01-01", "Activity": "Maize Identification", "Points": "+45"},
+    {"Date": "2025-12-31", "Activity": "Sugarcane Identification", "Points": "+50"}
+])

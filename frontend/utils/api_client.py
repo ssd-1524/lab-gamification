@@ -1,104 +1,53 @@
-from __future__ import annotations
-
-import os
-from typing import Any, Dict, Optional
-
 import requests
-import streamlit as st
-from dotenv import load_dotenv
-from supabase import create_client
 
-load_dotenv()
+API_BASE_URL = "http://localhost:8000"
 
-API_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://localhost:8000")
-
-
-def _get_supabase_client():
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_ANON_KEY")
-
-    if not supabase_url or not supabase_key:
-        raise RuntimeError("SUPABASE_URL or SUPABASE_ANON_KEY not set in .env")
-
-    return create_client(supabase_url, supabase_key)
-
-
-def _auth_headers(token: str) -> Dict[str, str]:
-    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-
-
-# ---------------------------------------------------------
-# Supabase Auth APIs
-# ---------------------------------------------------------
-def signup_user(payload: Dict[str, Any]) -> Dict[str, Any]:
-    supabase = _get_supabase_client()
-    response = supabase.auth.sign_up(
-        {"email": payload["email"], "password": payload["password"]}
-    )
-
-    if response.user is None:
-        raise ValueError("Signup failed")
-
-    return {"full_name": payload["full_name"], "email": payload["email"]}
-
-
-def login_user(email: str, password: str) -> Optional[str]:
-    supabase = _get_supabase_client()
+def get_roles():
+    """Fetches all roles from the backend."""
     try:
-        response = supabase.auth.sign_in_with_password(
-            {"email": email, "password": password}
-        )
-        return response.session.access_token
-    except Exception:  # noqa: BLE001
-        return None
+        response = requests.get(f"{API_BASE_URL}/roles/", timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        return []
+    except Exception as e:
+        print(f"Error fetching roles: {e}")
+        return []
 
-
-# ---------------------------------------------------------
-# FastAPI Backend APIs
-# ---------------------------------------------------------
-def fetch_current_user(token: str) -> Optional[Dict[str, Any]]:
+def get_locations():
+    """Fetches all locations from the backend."""
     try:
-        response = requests.get(
-            f"{API_BASE_URL}/users/me",
-            headers=_auth_headers(token),
-            timeout=10,
-        )
-        response.raise_for_status()
+        response = requests.get(f"{API_BASE_URL}/locations/", timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        return []
+    except Exception as e:
+        print(f"Error fetching locations: {e}")
+        return []
+
+def signup_user(payload: dict):
+    """Sends signup data to the backend."""
+    try:
+        response = requests.post(f"{API_BASE_URL}/auth/signup/", json=payload, timeout=10)
         return response.json()
-    except requests.RequestException as exc:
-        st.error("Failed to authenticate user.")
-        st.exception(exc)
-        return None
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
-
-def bootstrap_user(token: str) -> bool:
+def login_user(payload: dict):
+    """Sends login credentials to the backend."""
     try:
-        response = requests.post(
-            f"{API_BASE_URL}/users/bootstrap",
-            headers=_auth_headers(token),
-            timeout=10,
-        )
-        response.raise_for_status()
-        return True
-    except requests.RequestException as exc:
-        st.error("Bootstrap failed.")
-        st.exception(exc)
-        return False
+        response = requests.post(f"{API_BASE_URL}/auth/login/", json=payload, timeout=10)
+        return response.json()
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
-
-def log_event(token: str, feature: str, action: str, metadata: dict | None = None) -> bool:
-    payload = {"feature": feature, "action": action, "metadata": metadata or {}}
-
+def get_user_points(user_id: str):
+    """Fetches the point wallet for a specific user."""
     try:
-        response = requests.post(
-            f"{API_BASE_URL}/events",
-            json=payload,
-            headers=_auth_headers(token),
-            timeout=10,
-        )
-        response.raise_for_status()
-        return True
-    except requests.RequestException as exc:
-        st.warning("Could not log event.")
-        st.exception(exc)
-        return False
+        # Note: Ensure your backend has this route implemented
+        response = requests.get(f"{API_BASE_URL}/auth/points/{user_id}", timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        return {"total_points": 0, "rank": "Bronze"}
+    except Exception as e:
+        print(f"Error fetching points: {e}")
+        return {"total_points": 0, "rank": "Bronze"}

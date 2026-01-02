@@ -1,88 +1,63 @@
-"""
-Quiz page for the Stomata Labs gamified frontend.
-Allows users to attempt quizzes and logs their activity.
-"""
-
 from __future__ import annotations
 
-from typing import Dict
+from typing import Any, Dict, List
 
 import streamlit as st
 
 from utils.api_client import log_event
+from utils.sessions import get_access_token, is_authenticated
 
-# ---------------------------------------------------------
-# Page setup
-# ---------------------------------------------------------
-st.title("🧪 Knowledge Quizzes")
-st.markdown(
-    "<p class='neon-subtitle'>Sharpen your skills and earn points</p>",
-    unsafe_allow_html=True,
-)
 
-token = st.session_state.get("access_token")
+# ------------------ Guards ------------------ #
 
-if not token:
-    st.error("You are not authenticated.")
-    st.stop()
+if not is_authenticated():
+    st.switch_page("pages/auth.py")
 
-# Log quiz page open
-log_event(token, feature="quiz", action="open")
 
-# ---------------------------------------------------------
-# Dummy quiz data (replace with API call later)
-# ---------------------------------------------------------
-QUIZ_QUESTIONS: Dict[str, Dict[str, str]] = {
-    "q1": {
-        "question": "What does maintaining stable oscillation prevent?",
-        "A": "System downtime",
-        "B": "Energy loss",
-        "C": "Signal distortion",
-        "D": "All of the above",
-        "answer": "D",
-    },
-    "q2": {
-        "question": "Which action earns maximum points?",
-        "A": "Ignoring alerts",
-        "B": "Handling anomalies quickly",
-        "C": "Skipping shifts",
-        "D": "Closing the dashboard",
-        "answer": "B",
-    },
-}
+# ------------------ Page Header ------------------ #
 
-# ---------------------------------------------------------
-# Quiz Form
-# ---------------------------------------------------------
-with st.form("quiz_form"):
-    user_answers: Dict[str, str] = {}
+st.title("🧪 Daily Quizzes")
 
-    for qid, data in QUIZ_QUESTIONS.items():
-        st.markdown(f"**{data['question']}**")
-        choice = st.radio(
-            label="",
-            options=["A", "B", "C", "D"],
-            format_func=lambda x, opts=data: f"{x}: {opts[x]}",
-            key=qid,
-        )
-        user_answers[qid] = choice
 
-    submitted = st.form_submit_button("Submit Quiz")
+# ------------------ Fetch Quiz (Placeholder) ------------------ #
 
-# ---------------------------------------------------------
-# Evaluate Quiz
-# ---------------------------------------------------------
+def _fetch_quiz() -> Dict[str, Any]:
+    return {
+        "question": "What does API stand for?",
+        "options": [
+            "Application Programming Interface",
+            "Advanced Program Input",
+            "Automated Processing Instruction",
+        ],
+        "answer": "Application Programming Interface",
+    }
+
+
+quiz: Dict[str, Any] = _fetch_quiz()
+
+st.markdown("### 📘 Today's Question")
+st.write(quiz["question"])
+
+with st.form("daily_quiz_form"):
+    choice = st.radio("Select your answer:", quiz["options"])
+    submitted = st.form_submit_button("Submit")
+
+
 if submitted:
-    score = 0
-    for qid, selected in user_answers.items():
-        if selected == QUIZ_QUESTIONS[qid]["answer"]:
-            score += 1
+    correct = choice == quiz["answer"]
+    points = 30 if correct else 0
 
-    log_event(
-        token,
-        feature="quiz",
-        action="submit",
-        metadata={"score": score},
-    )
+    payload: Dict[str, Any] = {
+        "feature": "daily_quiz",
+        "action": "submit",
+        "metadata": {"correct": correct, "points": points},
+    }
 
-    st.success(f"🎉 You scored {score} / {len(QUIZ_QUESTIONS)}")
+    token = get_access_token()
+    if token:
+        log_event(token=token, payload=payload)
+
+    if correct:
+        st.success("Correct! You earned 30 points 🎉")
+    else:
+        st.warning("Incorrect answer. Try again tomorrow!")

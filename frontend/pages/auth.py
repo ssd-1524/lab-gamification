@@ -1,59 +1,80 @@
-from __future__ import annotations
-
 import streamlit as st
-from utils.api_client import signup_user, login_user
+from utils.api_client import get_roles, get_locations, signup_user, login_user
 
-st.set_page_config(page_title="Stomata Labs | Auth", layout="centered")
+st.set_page_config(page_title="Auth - Stomata Labs", page_icon="🔐")
 
-st.title("🧪 Stomata Labs")
-st.caption("Gamified AI Adoption Platform")
+# 1. Fetch data at the TOP of the file (Outside of any logic)
+# This ensures dropdowns populate immediately when the page loads
+roles_data = get_roles()
+locations_data = get_locations()
 
-tab_login, tab_signup = st.tabs(["🔐 Login", "✨ Sign Up"])
+st.title("🔐 Authentication")
 
-# ---------------------------------------------------
-# LOGIN
-# ---------------------------------------------------
+tab_login, tab_signup = st.tabs(["Login", "Create Account"])
+
+# --- LOGIN SECTION ---
 with tab_login:
     with st.form("login_form"):
+        st.subheader("Sign In")
         email = st.text_input("Email")
         password = st.text_input("Password", type="password")
-        login_submit = st.form_submit_button("Login")
+        submit_login = st.form_submit_button("Login", use_container_width=True)
 
-    if login_submit:
-        token = login_user(email, password)
-        if token:
-            st.session_state.access_token = token
-            st.success("Login successful!")
-            st.switch_page("pages/dashboard.py")
-        else:
-            st.error("Invalid email or password.")
+        if submit_login:
+            if not email or not password:
+                st.error("Please fill in all fields.")
+            else:
+                # FIX: Send as a dictionary to match api_client update
+                login_payload = {"email": email, "password": password}
+                res = login_user(login_payload)
+                
+                if "access_token" in res:
+                    st.session_state.is_authenticated = True
+                    st.session_state.user = res["user"]
+                    st.session_state.token = res["access_token"]
+                    st.session_state.show_login_popup = True  # Trigger dashboard popup
+                    
+                    st.success(f"Welcome back, {res['user']['name']}!")
+                    st.switch_page("pages/dashboard.py")
+                else:
+                    st.error(res.get("detail", "Login failed. Check your credentials."))
 
-# ---------------------------------------------------
-# SIGNUP
-# ---------------------------------------------------
+# --- SIGNUP SECTION ---
 with tab_signup:
     with st.form("signup_form"):
-        full_name = st.text_input("Full Name")
-        email = st.text_input("Email", key="signup_email")
-        password = st.text_input("Password", type="password", key="signup_pwd")
-        signup_submit = st.form_submit_button("Create Account")
+        st.subheader("Register New Account")
+        name = st.text_input("Full Name")
+        new_email = st.text_input("Email")
+        new_password = st.text_input("Password", type="password")
 
-    if signup_submit:
-        if not full_name or not email or not password:
-            st.error("All fields are required.")
-        else:
-            user = signup_user(
-                {
-                    "full_name": full_name,
-                    "email": email,
-                    "password": password,
-                }
-            )
-            if user:
-                # AUTO LOGIN AFTER SIGNUP
-                token = login_user(email, password)
-                st.session_state.access_token = token
-                st.success("Account created and logged in!")
-                st.switch_page("pages/dashboard.py")
+        # Dropdowns
+        selected_role = st.selectbox(
+            "Your Role",
+            options=roles_data,
+            format_func=lambda x: x["role_name"] if x else "No roles available"
+        )
+
+        selected_location = st.selectbox(
+            "Primary Location",
+            options=locations_data,
+            format_func=lambda x: x["loc_name"] if x else "No locations available"
+        )
+
+        submit_signup = st.form_submit_button("Sign Up", use_container_width=True)
+
+        if submit_signup:
+            if not all([name, new_email, new_password, selected_role, selected_location]):
+                st.error("Please fill in all fields.")
             else:
-                st.error("Signup failed.")
+                signup_payload = {
+                    "name": name,
+                    "email": new_email,
+                    "password": new_password,
+                    "role_id": selected_role["role_id"],
+                    "loc_id": selected_location["loc_id"]
+                }
+                res = signup_user(signup_payload)
+                if res.get("status") == "success":
+                    st.success("Account created! You can now log in.")
+                else:
+                    st.error(f"Signup failed: {res.get('detail')}")
