@@ -1,6 +1,6 @@
 from sqlalchemy import Enum
 
-role_names = Enum("Viewer", "Operator", "Executive", "Manager",name = "role_names",create_type=False)
+role_names = Enum("Admin", "HR", "ViewerReport", "ViewerSPC", "ViewerReportSPC", "Viewer", "Operator", "Executive", "Manager",name = "role_names")
 
 question_types = Enum("Sugarcane", "Role", "Plan",name = "question_types",create_type=False )
 
