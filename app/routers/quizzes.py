@@ -7,6 +7,7 @@ from uuid import uuid4, UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from uuid import uuid4
 
 from app.routers.deps import get_authenticated_user, get_db
 from app.models.schema import (
@@ -27,7 +28,7 @@ def get_today_quiz(
 ) -> Dict[str, List[dict]]:
     """Return today's quiz questions for the authenticated user."""
 
-    user_id = UUID(user["sub"])  # ✅ OK
+    user_id = user["user_id"]
 
     db_user = db.query(Users).filter(Users.user_id == user_id).first()
     if not db_user:

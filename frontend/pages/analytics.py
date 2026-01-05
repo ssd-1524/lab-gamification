@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Dict, Any
 
 import streamlit as st
 
-from utils.session import get_current_user, is_authenticated
+from utils.sessions import is_authenticated
+from utils.api_client import get_analytics_summary
+from utils.events import log_event
 
 
 # ------------------ Guards ------------------ #
@@ -12,30 +14,47 @@ from utils.session import get_current_user, is_authenticated
 if not is_authenticated():
     st.switch_page("pages/auth.py")
 
-user = get_current_user()
-if not user or user.get("role") not in {"Admin", "HR"}:
-    st.error("You are not authorized to view this page.")
-    st.stop()
+
+# 🔴 PAGE VIEW EVENT
+log_event("analytics", "page_view")
 
 
-# ------------------ Page Header ------------------ #
+# ------------------ Fetch Data ------------------ #
 
-st.title("📊 Platform Analytics")
-
-
-# ------------------ Placeholder Analytics ------------------ #
-
-def _fetch_usage_metrics() -> List[Dict[str, Any]]:
-    return [
-        {"metric": "Total Logins", "value": 1250},
-        {"metric": "Quizzes Completed", "value": 980},
-        {"metric": "Badges Awarded", "value": 150},
-    ]
+analytics: Dict[str, Any] = get_analytics_summary()
 
 
-metrics = _fetch_usage_metrics()
+# ------------------ UI ------------------ #
 
-st.markdown("### 📈 Usage Metrics")
+st.title("📈 Platform Analytics")
 
-for item in metrics:
-    st.metric(label=item["metric"], value=item["value"])
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("Daily Active Users", analytics.get("daily_active_users", 0))
+    log_event("analytics", "metric_view", {"metric": "daily_active_users"})
+
+with col2:
+    st.metric("Average Quiz Score", analytics.get("avg_quiz_score", 0))
+    log_event("analytics", "metric_view", {"metric": "avg_quiz_score"})
+
+with col3:
+    st.metric("Total Points Issued", analytics.get("total_points_issued", 0))
+    log_event("analytics", "metric_view", {"metric": "total_points_issued"})
+
+
+st.divider()
+
+st.subheader("🔥 Engagement Trends")
+
+time_range = st.selectbox(
+    "Select Time Range",
+    options=["Today", "Last 7 Days", "Last 30 Days"],
+)
+
+log_event("analytics", "range_select", {"range": time_range})
+
+
+if st.button("Refresh Analytics", type="primary"):
+    log_event("analytics", "refresh_click")
+    st.rerun()

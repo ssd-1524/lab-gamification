@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import streamlit as st
 
 from utils.sessions import get_current_user, is_authenticated
+from utils.events import log_event   # 🔴 ADDED
 
 
 # ------------------ Guards ------------------ #
 
 if not is_authenticated():
     st.switch_page("pages/auth.py")
+
+# 🔴 PAGE VIEW EVENT
+log_event("profile", "page_view")
 
 
 # ------------------ Fetch Profile Data (Placeholder) ------------------ #
@@ -35,7 +39,10 @@ st.write(f"**Name:** {user.get('name', 'User')}")
 
 st.markdown("### 🪙 Points Wallet")
 st.metric("Total Points", profile["total_points"])
+log_event("wallet", "view", {"total_points": profile["total_points"]})  # 🔴 ADDED
+
 st.metric("Rank", profile["rank"])
+log_event("wallet", "rank_view", {"rank": profile["rank"]})  # 🔴 ADDED
 
 st.markdown("### 🏅 Badges Earned")
 for badge in profile["badges"]:

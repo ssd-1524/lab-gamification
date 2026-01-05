@@ -6,7 +6,7 @@ import requests
 import streamlit as st
 
 from utils.sessions import get_access_token, is_authenticated
-from utils.api_client import log_event
+from utils.events import log_event   # 🔴 FIXED IMPORT
 
 API_BASE_URL = "http://localhost:8000"
 
@@ -14,6 +14,9 @@ API_BASE_URL = "http://localhost:8000"
 
 if not is_authenticated():
     st.switch_page("pages/auth.py")
+
+# 🔴 PAGE VIEW EVENT
+log_event("quiz", "page_view")
 
 # ------------------ Helpers ------------------ #
 
@@ -80,6 +83,7 @@ def submit_quiz_score(score: int):
     if response.status_code != 200:
         st.error("Failed to save quiz score")
 
+
 # ------------------ Page Header ------------------ #
 
 st.title("🧪 Daily Quiz")
@@ -124,6 +128,8 @@ with st.form(key=f"quiz_form_{idx}"):
 # ------------------ Submission Logic ------------------ #
 
 if submitted:
+    log_event("quiz", "submit_click")  # 🔴 ADDED
+
     correct = selected_label == current_question["correct_option"]
 
     if correct:
@@ -158,10 +164,14 @@ if st.session_state.get("completed"):
 
     if not st.session_state.points_saved:
         submit_quiz_score(st.session_state.score)
+        log_event("quiz", "completed", {"final_score": st.session_state.score})  # 🔴 ADDED
         st.session_state.points_saved = True
+    else:
+        log_event("quiz", "submit_blocked", {"reason": "points_saved_guard"})  # 🔴 ADDED
         st.session_state.daily_quiz_completed = True
 
     if st.button("Go to Dashboard"):
+        log_event("dashboard", "go_click")  # 🔴 ADDED
         for key in [
             "quiz_questions",
             "current_index",
