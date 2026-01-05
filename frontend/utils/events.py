@@ -1,21 +1,70 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+import threading
+from typing import Any, Dict, Optional
 
-from utils.api_client import log_event
-from utils.sessions import get_access_token
+import requests
+import streamlit as st
+
+from utils.api_client import API_BASE_URL
 
 
-def record_event(feature: str, action: str, metadata: Dict[str, Any]) -> bool:
-    """Record a gamification event for the current user."""
-    token = get_access_token()
-    if not token:
-        return False
+def _post_event(
+    access_token: str,
+    payload: Dict[str, Any],
+) -> None:
+    """
+    Background worker: sends the event to backend.
+    This must NEVER touch session_state or Streamlit UI.
+    """
+    try:
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        }
+        requests.post(
+            f"{API_BASE_URL}/events",
+            json=payload,
+            headers=headers,
+            timeout=3,
+        )
+    except Exception:
+        # Analytics must never break UX
+        pass
 
-    payload = {
-        "feature": feature,
-        "action": action,
-        "metadata": metadata,
-    }
 
-    return log_event(token=token, payload=payload)
+def log_event(
+    feature: str,
+    action: str,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> None:
+    """
+    Fire-and-forget event logger.
+
+    Rules:
+    - Never blocks UI
+    - Never mutates session_state
+    - Never forces rerun
+    - Never raises
+    """
+    try:
+        access_token = st.session_state.get("access_token")
+        if not access_token:
+            return
+
+        payload: Dict[str, Any] = {
+            "feature": feature,
+            "action": action,
+            "metadata": metadata or {},
+        }
+
+        worker = threading.Thread(
+            target=_post_event,
+            args=(access_token, payload),
+            daemon=True,
+        )
+        worker.start()
+
+    except Exception:
+        # Never let analytics crash UX
+        pass

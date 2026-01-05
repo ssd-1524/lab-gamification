@@ -5,7 +5,7 @@ from typing import Dict, List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from uuid import uuid4, UUID
+from uuid import uuid4
 
 from app.routers.deps import get_authenticated_user
 
@@ -29,7 +29,7 @@ def get_today_quiz(
 ) -> Dict[str, List[dict]]:
     """Return today's quiz questions for the authenticated user."""
 
-    user_id = UUID(user["sub"])
+    user_id = user["user_id"]
 
     db_user = db.query(Users).filter(Users.user_id == user_id).first()
     if not db_user:
@@ -80,7 +80,7 @@ def complete_quiz(
     Persist quiz score into pointwallet and pointhistory
     """
 
-    user_id = UUID(user["sub"])
+    user_id = user["user_id"]
     score = payload.get("score")
 
     if score is None:

@@ -6,7 +6,7 @@ import requests
 import streamlit as st
 
 from utils.sessions import get_access_token, is_authenticated
-from utils.api_client import log_event
+from utils.events import log_event   # 🔴 FIXED IMPORT
 
 API_BASE_URL = "http://localhost:8000"
 
@@ -15,12 +15,12 @@ API_BASE_URL = "http://localhost:8000"
 if not is_authenticated():
     st.switch_page("pages/auth.py")
 
+# 🔴 PAGE VIEW EVENT
+log_event("quiz", "page_view")
+
 # ------------------ Helpers ------------------ #
 
 def fetch_random_question(question_type: str) -> Dict:
-    """
-    Fetch all questions of a given type and return one random question
-    """
     response = requests.get(
         f"{API_BASE_URL}/questions/",
         params={"question_type": question_type},
@@ -32,10 +32,6 @@ def fetch_random_question(question_type: str) -> Dict:
 
 
 def initialize_quiz():
-    """
-    Initialize quiz with exactly 3 questions:
-    Role, Plan, Sugarcane
-    """
     st.session_state.quiz_questions = [
         fetch_random_question("Role"),
         fetch_random_question("Plan"),
@@ -48,9 +44,6 @@ def initialize_quiz():
 
 
 def submit_quiz_score(score: int):
-    """
-    Persist final quiz score to backend
-    """
     token = get_access_token()
     if not token:
         st.error("Authentication token missing. Cannot save score.")
@@ -70,6 +63,7 @@ def submit_quiz_score(score: int):
 
     if response.status_code != 200:
         st.error("Failed to save quiz score")
+
 
 # ------------------ Page Header ------------------ #
 
@@ -106,29 +100,26 @@ with st.form(key=f"quiz_form_{idx}"):
 # ------------------ Submission Logic ------------------ #
 
 if submitted:
+    log_event("quiz", "submit_click")  # 🔴 ADDED
+
     correct = selected_label == current_question["correct_option"]
+
+    log_event(  # 🔴 ADDED
+        "quiz",
+        "answer_selected",
+        {
+            "question_id": current_question["question_id"],
+            "question_type": current_question["question_type"],
+            "selected": selected_label,
+        },
+    )
 
     if correct:
         st.session_state.score += 10
+        log_event("quiz", "answer_correct", {"question_id": current_question["question_id"]})  # 🔴 ADDED
+    else:
+        log_event("quiz", "answer_wrong", {"question_id": current_question["question_id"]})  # 🔴 ADDED
 
-    # Log analytics event
-    token = get_access_token()
-    if token:
-        log_event(
-            token=token,
-            payload={
-                "feature": "quiz",
-                "action": "answer",
-                "metadata": {
-                    "question_id": current_question["question_id"],
-                    "question_type": current_question["question_type"],
-                    "selected": selected_label,
-                    "correct": correct,
-                },
-            },
-        )
-
-    # Move to next question or finish
     if idx < 2:
         st.session_state.current_index += 1
         st.experimental_rerun()
@@ -142,12 +133,15 @@ if st.session_state.get("completed"):
     st.success("🎉 Quiz Completed!")
     st.markdown(f"### 🏆 Your Score: {st.session_state.score} / 30")
 
-    # Persist score exactly once
     if not st.session_state.points_saved:
         submit_quiz_score(st.session_state.score)
+        log_event("quiz", "completed", {"final_score": st.session_state.score})  # 🔴 ADDED
         st.session_state.points_saved = True
+    else:
+        log_event("quiz", "submit_blocked", {"reason": "points_saved_guard"})  # 🔴 ADDED
 
     if st.button("Go to Dashboard"):
+        log_event("dashboard", "go_click")  # 🔴 ADDED
         for key in [
             "quiz_questions",
             "current_index",

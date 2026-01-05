@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import List, Dict
 
 import streamlit as st
 
-from utils.session import is_authenticated
+from utils.api_client import get_leaderboard
+from utils.sessions import is_authenticated
+from utils.events import log_event
 
 
 # ------------------ Guards ------------------ #
@@ -13,24 +15,32 @@ if not is_authenticated():
     st.switch_page("pages/auth.py")
 
 
-# ------------------ Page Header ------------------ #
+# 🔴 PAGE VIEW EVENT
+log_event("leaderboard", "page_view")
+
+
+# ------------------ Data ------------------ #
+
+leaderboard: List[Dict] = get_leaderboard(limit=10)
+
+
+# ------------------ UI ------------------ #
 
 st.title("🏆 Leaderboard")
 
-
-# ------------------ Fetch Leaderboard (Placeholder) ------------------ #
-
-def _fetch_leaderboard() -> List[Dict[str, Any]]:
-    return [
-        {"name": "Alice", "points": 420, "rank": "Gold"},
-        {"name": "Bob", "points": 360, "rank": "Silver"},
-        {"name": "Charlie", "points": 300, "rank": "Bronze"},
-    ]
-
-
-leaderboard = _fetch_leaderboard()
-
-st.markdown("### 🌟 Top Performers")
-
-for idx, user in enumerate(leaderboard, start=1):
-    st.write(f"{idx}. **{user['name']}** — {user['points']} pts ({user['rank']})")
+if not leaderboard:
+    st.info("No leaderboard data available yet.")
+else:
+    for idx, user in enumerate(leaderboard, start=1):
+        cols = st.columns([1, 4, 2])
+        with cols[0]:
+            st.write(f"#{idx}")
+        with cols[1]:
+            if st.button(user["name"], key=f"user_{user['user_id']}"):
+                log_event(
+                    "leaderboard",
+                    "user_inspect",
+                    {"target_user_id": user["user_id"]},
+                )
+        with cols[2]:
+            st.write(f"{user['points']} pts")

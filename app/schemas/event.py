@@ -1,10 +1,11 @@
+from __future__ import annotations
+
+from typing import Dict, Any, Optional
+
 from pydantic import BaseModel
-from uuid import UUID
-from typing import Optional, Dict
+
 
 class EventCreate(BaseModel):
-    session_id: UUID
-    plan_id: UUID
     feature: str
     action: str
-    metadata: Optional[Dict]
+    metadata: Optional[Dict[str, Any]] = {}

@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.api_client import get_user_points
+from utils.events import log_event   # 🔴 ADDED
 
 # 1. Page Configuration
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
@@ -10,12 +11,14 @@ if not st.session_state.get("is_authenticated"):
     st.switch_page("streamlit_app.py")
     st.stop()
 
+# 🔴 PAGE VIEW EVENT
+log_event("dashboard", "page_view")
+
 # 3. Data Initialization
 user = st.session_state.user
 points_data = get_user_points()
 
-# --- REVISED POPUP (COMPATIBLE WITH ALL VERSIONS) ---
-# We check if the flag is True. If so, we display a distinct high-contrast box at the top.
+# --- REVISED POPUP ---
 if st.session_state.get("show_login_popup", False):
     with st.container(border=True):
         st.markdown("### 🎯 Daily Training Available")
@@ -25,10 +28,12 @@ if st.session_state.get("show_login_popup", False):
         col1, col2 = st.columns([1, 4])
         with col1:
             if st.button("🚀 Start Quiz", type="primary", use_container_width=True):
+                log_event("dashboard", "start_quiz_click")  # 🔴 ADDED
                 st.session_state.show_login_popup = False
                 st.switch_page("pages/quizzes.py")
         with col2:
             if st.button("🕒 Maybe Later", use_container_width=True):
+                log_event("dashboard", "maybe_later_click")  # 🔴 ADDED
                 st.session_state.show_login_popup = False
                 st.rerun()
     st.divider()
@@ -36,7 +41,6 @@ if st.session_state.get("show_login_popup", False):
 # --- MAIN DASHBOARD UI ---
 st.title(f"👋 Welcome, {user['name']}!")
 
-# User Profile Info Bar
 st.info(f"📍 **Location:** {user.get('loc_name', 'Not Assigned')} | 🛠️ **Role:** {user.get('role_name', 'General User')}")
 
 st.divider()
@@ -50,6 +54,7 @@ with col1:
         value=f"{points_data.get('total_points', 0)} pts",
         delta="Lifetime Earnings"
     )
+    log_event("wallet", "view", {"total_points": points_data.get("total_points", 0)})  # 🔴 ADDED
 
 with col2:
     st.metric(label="Global Rank", value="#--")
@@ -60,6 +65,7 @@ with col3:
         value=points_data.get('rank', 'Bronze'),
         delta="Tier Progress"
     )
+    log_event("wallet", "rank_view", {"rank": points_data.get("rank", "Bronze")})  # 🔴 ADDED
 
 st.divider()
 
@@ -79,6 +85,7 @@ with c1:
     
 with c2:
     if st.button("Open Training Center", use_container_width=True, type="primary"):
+        log_event("dashboard", "open_training_center")  # 🔴 ADDED
         st.switch_page("pages/quiz.py")
 
 st.divider()
