@@ -18,24 +18,36 @@ if not is_authenticated():
 # ------------------ Helpers ------------------ #
 
 def fetch_random_question(question_type: str) -> Dict:
-    """
-    Fetch all questions of a given type and return one random question
-    """
     response = requests.get(
         f"{API_BASE_URL}/questions/",
         params={"question_type": question_type},
         timeout=5,
     )
     response.raise_for_status()
-    questions = response.json()
-    return random.choice(questions)
+    return random.choice(response.json())
+
+
+def check_daily_quiz_status() -> bool:
+    """Check once per session whether today's quiz is completed"""
+    token = get_access_token()
+    if not token:
+        return True
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get(
+        f"{API_BASE_URL}/quizzes/status",
+        headers=headers,
+        timeout=5,
+    )
+
+    if response.status_code == 200:
+        return response.json().get("completed", False)
+
+    return True
 
 
 def initialize_quiz():
-    """
-    Initialize quiz with exactly 3 questions:
-    Role, Plan, Sugarcane
-    """
     st.session_state.quiz_questions = [
         fetch_random_question("Role"),
         fetch_random_question("Plan"),
@@ -48,12 +60,9 @@ def initialize_quiz():
 
 
 def submit_quiz_score(score: int):
-    """
-    Persist final quiz score to backend
-    """
     token = get_access_token()
     if not token:
-        st.error("Authentication token missing. Cannot save score.")
+        st.error("Authentication token missing.")
         return
 
     headers = {
@@ -75,7 +84,16 @@ def submit_quiz_score(score: int):
 
 st.title("🧪 Daily Quiz")
 
-# ------------------ Initialize State ------------------ #
+# ------------------ Daily Quiz Lock (ONCE) ------------------ #
+
+if "daily_quiz_completed" not in st.session_state:
+    st.session_state.daily_quiz_completed = check_daily_quiz_status()
+
+if st.session_state.daily_quiz_completed:
+    st.warning("🚫 Daily Quiz is Already Completed")
+    st.stop()
+
+# ------------------ Initialize Quiz ------------------ #
 
 if "quiz_questions" not in st.session_state:
     initialize_quiz()
@@ -111,7 +129,6 @@ if submitted:
     if correct:
         st.session_state.score += 10
 
-    # Log analytics event
     token = get_access_token()
     if token:
         log_event(
@@ -128,13 +145,10 @@ if submitted:
             },
         )
 
-    # Move to next question or finish
     if idx < 2:
         st.session_state.current_index += 1
-        st.experimental_rerun()
     else:
         st.session_state.completed = True
-        st.experimental_rerun()
 
 # ------------------ Quiz Completed ------------------ #
 
@@ -142,10 +156,10 @@ if st.session_state.get("completed"):
     st.success("🎉 Quiz Completed!")
     st.markdown(f"### 🏆 Your Score: {st.session_state.score} / 30")
 
-    # Persist score exactly once
     if not st.session_state.points_saved:
         submit_quiz_score(st.session_state.score)
         st.session_state.points_saved = True
+        st.session_state.daily_quiz_completed = True
 
     if st.button("Go to Dashboard"):
         for key in [
@@ -154,6 +168,7 @@ if st.session_state.get("completed"):
             "score",
             "completed",
             "points_saved",
+            "daily_quiz_completed",
         ]:
             st.session_state.pop(key, None)
 

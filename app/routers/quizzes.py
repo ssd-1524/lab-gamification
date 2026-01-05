@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from typing import Dict, List
+from datetime import date
+from uuid import uuid4, UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from uuid import uuid4, UUID
 
-from app.routers.deps import get_authenticated_user
-
-
+from app.routers.deps import get_authenticated_user, get_db
 from app.models.schema import (
     PointWallet,
     PointHistory,
@@ -17,7 +16,6 @@ from app.models.schema import (
     Question,
     Users,
 )
-from app.routers.deps import get_db
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
@@ -29,7 +27,7 @@ def get_today_quiz(
 ) -> Dict[str, List[dict]]:
     """Return today's quiz questions for the authenticated user."""
 
-    user_id = UUID(user["sub"])
+    user_id = UUID(user["sub"])  # ✅ OK
 
     db_user = db.query(Users).filter(Users.user_id == user_id).first()
     if not db_user:
@@ -80,7 +78,26 @@ def complete_quiz(
     Persist quiz score into pointwallet and pointhistory
     """
 
-    user_id = UUID(user["sub"])
+    user_id = UUID(user["sub"])  # ✅ MOVED UP (FIX)
+    today = date.today()
+
+    # ✅ USER-SCOPED DAILY CHECK (FIX)
+    already_completed = (
+        db.query(PointHistory)
+        .filter(
+            PointHistory.user_id == user_id,     # ✅ per-user
+            PointHistory.source == "Quiz",
+            func.date(PointHistory.timestamp) == today,
+        )
+        .first()
+    )
+
+    if already_completed:
+        raise HTTPException(
+            status_code=400,
+            detail="Daily quiz already completed",
+        )
+
     score = payload.get("score")
 
     if score is None:
@@ -98,7 +115,7 @@ def complete_quiz(
     )
     db.add(history)
 
-    # 2️⃣ Update pointwallet
+    # 2️⃣ Update or create pointwallet
     wallet = (
         db.query(PointWallet)
         .filter(PointWallet.user_id == user_id)
@@ -112,7 +129,7 @@ def complete_quiz(
         wallet = PointWallet(
             user_id=user_id,
             total_points=score,
-            rank=None,  # rank later
+            rank=None,  # handled later
         )
         db.add(wallet)
 
@@ -122,4 +139,28 @@ def complete_quiz(
         "message": "Quiz score persisted successfully",
         "points_added": score,
         "total_points": wallet.total_points,
+    }
+
+
+@router.get("/status")
+def quiz_status(
+    user: dict = Depends(get_authenticated_user),
+    db: Session = Depends(get_db),
+):
+    user_id = UUID(user["sub"])
+    today = date.today()
+
+    # ✅ USER-SCOPED STATUS CHECK (CORRECT)
+    quiz_done_today = (
+        db.query(PointHistory)
+        .filter(
+            PointHistory.user_id == user_id,
+            PointHistory.source == "Quiz",
+            func.date(PointHistory.timestamp) == today,
+        )
+        .first()
+    )
+
+    return {
+        "completed": bool(quiz_done_today)
     }
