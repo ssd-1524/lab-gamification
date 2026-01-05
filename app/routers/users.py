@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.schema import PointWallet, Sessions, Users
 from app.routers.deps import get_db
-from app.utils.dependencies import get_authenticated_user
+from app.routers.deps import get_authenticated_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
