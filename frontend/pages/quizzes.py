@@ -10,12 +10,10 @@ from utils.api_client import log_event
 
 API_BASE_URL = "http://localhost:8000"
 
-
 # ------------------ Guards ------------------ #
 
 if not is_authenticated():
     st.switch_page("pages/auth.py")
-
 
 # ------------------ Helpers ------------------ #
 
@@ -46,23 +44,45 @@ def initialize_quiz():
     st.session_state.current_index = 0
     st.session_state.score = 0
     st.session_state.completed = False
+    st.session_state.points_saved = False
 
+
+def submit_quiz_score(score: int):
+    """
+    Persist final quiz score to backend
+    """
+    token = get_access_token()
+    if not token:
+        st.error("Authentication token missing. Cannot save score.")
+        return
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(
+        f"{API_BASE_URL}/quizzes/complete",
+        json={"score": score},
+        headers=headers,
+        timeout=5,
+    )
+
+    if response.status_code != 200:
+        st.error("Failed to save quiz score")
 
 # ------------------ Page Header ------------------ #
 
 st.title("🧪 Daily Quiz")
-
 
 # ------------------ Initialize State ------------------ #
 
 if "quiz_questions" not in st.session_state:
     initialize_quiz()
 
-
 questions: List[Dict] = st.session_state.quiz_questions
 idx: int = st.session_state.current_index
 current_question: Dict = questions[idx]
-
 
 # ------------------ Render Question ------------------ #
 
@@ -83,7 +103,6 @@ with st.form(key=f"quiz_form_{idx}"):
     )
     submitted = st.form_submit_button("Submit")
 
-
 # ------------------ Submission Logic ------------------ #
 
 if submitted:
@@ -92,7 +111,7 @@ if submitted:
     if correct:
         st.session_state.score += 10
 
-    # log analytics event
+    # Log analytics event
     token = get_access_token()
     if token:
         log_event(
@@ -109,13 +128,13 @@ if submitted:
             },
         )
 
-    # move to next question or finish
+    # Move to next question or finish
     if idx < 2:
         st.session_state.current_index += 1
         st.experimental_rerun()
     else:
         st.session_state.completed = True
-
+        st.experimental_rerun()
 
 # ------------------ Quiz Completed ------------------ #
 
@@ -123,10 +142,19 @@ if st.session_state.get("completed"):
     st.success("🎉 Quiz Completed!")
     st.markdown(f"### 🏆 Your Score: {st.session_state.score} / 30")
 
+    # Persist score exactly once
+    if not st.session_state.points_saved:
+        submit_quiz_score(st.session_state.score)
+        st.session_state.points_saved = True
+
     if st.button("Go to Dashboard"):
-        # clear quiz-related session state
-        for key in ["quiz_questions", "current_index", "score", "completed"]:
+        for key in [
+            "quiz_questions",
+            "current_index",
+            "score",
+            "completed",
+            "points_saved",
+        ]:
             st.session_state.pop(key, None)
 
         st.switch_page("pages/dashboard.py")
-

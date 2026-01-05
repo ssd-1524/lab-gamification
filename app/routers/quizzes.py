@@ -2,12 +2,22 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from uuid import uuid4, UUID
 
-from app.models.schema import Location, Question, Users
+from app.routers.deps import get_authenticated_user
+
+
+from app.models.schema import (
+    PointWallet,
+    PointHistory,
+    Location,
+    Question,
+    Users,
+)
 from app.routers.deps import get_db
-from app.utils.dependencies import get_authenticated_user
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
@@ -18,7 +28,8 @@ def get_today_quiz(
     db: Session = Depends(get_db),
 ) -> Dict[str, List[dict]]:
     """Return today's quiz questions for the authenticated user."""
-    user_id = user["sub"]
+
+    user_id = UUID(user["sub"])
 
     db_user = db.query(Users).filter(Users.user_id == user_id).first()
     if not db_user:
@@ -56,4 +67,59 @@ def get_today_quiz(
             }
             for q in questions
         ]
+    }
+
+
+@router.post("/complete")
+def complete_quiz(
+    payload: dict,
+    user: dict = Depends(get_authenticated_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Persist quiz score into pointwallet and pointhistory
+    """
+
+    user_id = UUID(user["sub"])
+    score = payload.get("score")
+
+    if score is None:
+        raise HTTPException(status_code=400, detail="Score is required")
+
+    if score < 0 or score > 30:
+        raise HTTPException(status_code=400, detail="Invalid quiz score")
+
+    # 1️⃣ Insert into pointhistory
+    history = PointHistory(
+        id=uuid4(),
+        user_id=user_id,
+        points=score,
+        source="Quiz",
+    )
+    db.add(history)
+
+    # 2️⃣ Update pointwallet
+    wallet = (
+        db.query(PointWallet)
+        .filter(PointWallet.user_id == user_id)
+        .first()
+    )
+
+    if wallet:
+        wallet.total_points = (wallet.total_points or 0) + score
+        wallet.updated_at = func.now()
+    else:
+        wallet = PointWallet(
+            user_id=user_id,
+            total_points=score,
+            rank=None,  # rank later
+        )
+        db.add(wallet)
+
+    db.commit()
+
+    return {
+        "message": "Quiz score persisted successfully",
+        "points_added": score,
+        "total_points": wallet.total_points,
     }

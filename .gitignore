@@ -1,2 +1,10 @@
 .venv/
 .env
+.app/models/__pycache__
+.app/routers/__pycache__
+.app/utils/__pycache__
+.app/schemas/__pycache__
+.app/__pycache__
+.frontend/__pycache__
+.frontend/pages/__pycache__
+.frontend/utils/__pycache__

@@ -12,7 +12,7 @@ if not st.session_state.get("is_authenticated"):
 
 # 3. Data Initialization
 user = st.session_state.user
-points_data = get_user_points(user['id'])
+points_data = get_user_points()
 
 # --- REVISED POPUP (COMPATIBLE WITH ALL VERSIONS) ---
 # We check if the flag is True. If so, we display a distinct high-contrast box at the top.

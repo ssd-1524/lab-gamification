@@ -1,4 +1,5 @@
 import requests
+from utils.sessions import get_access_token
 
 API_BASE_URL = "http://localhost:8000"
 
@@ -40,17 +41,36 @@ def login_user(payload: dict):
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
-def get_user_points(user_id: str):
-    """Fetches the point wallet for a specific user."""
+def get_user_points():
+    """Fetches the point wallet for the logged-in user."""
     try:
-        # Note: Ensure your backend has this route implemented
-        response = requests.get(f"{API_BASE_URL}/auth/points/{user_id}", timeout=5)
+        token = get_access_token()
+        if not token:
+            return {"total_points": 0, "rank": None}
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+        response = requests.get(
+            f"{API_BASE_URL}/auth/points",
+            headers=headers,
+            timeout=5,
+        )
+
         if response.status_code == 200:
             return response.json()
-        return {"total_points": 0, "rank": "Bronze"}
+
+        if response.status_code == 401:
+            print("Unauthorized while fetching points")
+            return {"total_points": 0, "rank": None}
+
+        response.raise_for_status()
+
     except Exception as e:
         print(f"Error fetching points: {e}")
-        return {"total_points": 0, "rank": "Bronze"}
+        return {"total_points": 0, "rank": None}
     
 def log_event(token: str, payload: dict) -> bool:
     """

@@ -5,6 +5,8 @@ from app.routers.deps import get_db
 from app.models import schema
 from app.utils.auth import supabase
 from pydantic import BaseModel, EmailStr
+from app.routers.deps import get_authenticated_user
+
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -127,3 +129,24 @@ async def login(payload: UserLogin, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
+    
+@router.get("/points")
+def get_my_points(
+    user: dict = Depends(get_authenticated_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Return total points and rank for the authenticated user
+    """
+    user_id = user["sub"]
+
+    wallet = (
+        db.query(schema.PointWallet)
+        .filter(schema.PointWallet.user_id == user_id)
+        .first()
+    )
+
+    return {
+        "total_points": wallet.total_points if wallet else 0,
+        "rank": wallet.rank if wallet else None,
+    }

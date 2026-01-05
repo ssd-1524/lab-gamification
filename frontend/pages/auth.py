@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.api_client import get_roles, get_locations, signup_user, login_user
+from utils.sessions import set_authenticated
 
 st.set_page_config(page_title="Auth - Stomata Labs", page_icon="🔐")
 
@@ -29,9 +30,10 @@ with tab_login:
                 res = login_user(login_payload)
                 
                 if "access_token" in res:
-                    st.session_state.is_authenticated = True
-                    st.session_state.user = res["user"]
-                    st.session_state.token = res["access_token"]
+                    set_authenticated(
+                        token=res["access_token"],
+                        user=res["user"]
+                    )
                     st.session_state.show_login_popup = True  # Trigger dashboard popup
                     
                     st.success(f"Welcome back, {res['user']['name']}!")
