@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
 from app.background.badge_worker import run_badge_worker
+from app.background.tier_badge_worker import run_tier_badge_worker
 
 # Importing from your specific router files
 from app.routers import (
@@ -64,3 +65,4 @@ def health_check() -> dict:
 @app.on_event("startup")
 def start_background_workers():
     Thread(target=run_badge_worker, daemon=True).start()
+    Thread(target=run_tier_badge_worker, daemon=True).start()
