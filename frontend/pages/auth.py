@@ -1,9 +1,20 @@
 import streamlit as st
 from utils.api_client import get_roles, get_locations, signup_user, login_user
-from utils.sessions import set_authenticated
+from utils.sessions import set_authenticated, is_authenticated
+
 from utils.events import log_event  # 🔴 ADDED
 
 st.set_page_config(page_title="Auth - Stomata Labs", page_icon="🔐")
+
+# 🔐 HIDE SIDEBAR IF NOT AUTHENTICATED
+if not is_authenticated():
+    st.markdown("""
+    <style>
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # 1. Fetch data at the TOP of the file (Outside of any logic)
 roles_data = get_roles()
