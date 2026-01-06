@@ -1,10 +1,10 @@
 from supabase import create_client
-from os import getenv
+from app.config import get_settings
 
-SUPABASE_URL = getenv("SUPABASE_URL")
-SUPABASE_ANON_KEY = getenv("SUPABASE_ANON_KEY")
+settings = get_settings()
 
 supabase_client = create_client(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
+    settings.SUPABASE_URL,
+    # Use service role key for backend jobs if available
+    settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY
 )
