@@ -33,7 +33,7 @@ class Users(Base):
  
     created_at = Column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        server_default=func.timezone("Asia/Kolkata", func.now()),
         nullable=False
     )
  
@@ -56,7 +56,7 @@ class Sessions(Base):
    
     login_time = Column(
         DateTime,
-        server_default=func.now(),
+        server_default=func.timezone("Asia/Kolkata", func.now()),
         nullable=False
     )
    
@@ -143,7 +143,7 @@ class PointWallet(Base):
  
     updated_at = Column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        server_default=func.timezone("Asia/Kolkata", func.now()),
         onupdate=func.now(),
         nullable=True
     )
@@ -175,8 +175,8 @@ class PointHistory(Base):
  
     timestamp = Column(
         DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
+        server_default=func.timezone("Asia/Kolkata", func.now()),
+        onupdate=func.timezone("Asia/Kolkata", func.now()),
         nullable=True
     )
  
@@ -253,8 +253,8 @@ class Event(Base):
     action = Column(String)
  
     timestamp = Column(
-        DateTime,
-        server_default=func.now()
+        DateTime(timezone=True),
+        server_default=func.timezone("Asia/Kolkata", func.now()),
     )
  
     event_metadata = Column("metadata", JSON)

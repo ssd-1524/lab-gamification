@@ -1,4 +1,6 @@
 import streamlit as st
+from utils.sessions import is_authenticated
+from utils.events import log_event
 
 # 1. Basic Page Configuration
 st.set_page_config(
@@ -12,6 +14,34 @@ if "is_authenticated" not in st.session_state:
     st.session_state.is_authenticated = False
 if "user" not in st.session_state:
     st.session_state.user = None
+
+with st.sidebar:
+    st.markdown("## 🧪 Stomata Labs")
+
+    if is_authenticated():
+        if st.button("Dashboard"):
+            log_event("sidebar", "dashboard_click")
+            st.switch_page("pages/dashboard.py")
+
+        if st.button("Daily Quiz"):
+            log_event("sidebar", "quiz_click")
+            st.switch_page("pages/quizzes.py")
+
+        if st.button("Leaderboard"):
+            log_event("sidebar", "leaderboard_click")
+            st.switch_page("pages/leaderboard.py")
+
+        if st.button("Guides"):
+            log_event("sidebar", "guides_click")
+            st.switch_page("pages/guides.py")
+
+        if st.button("Profile"):
+            log_event("sidebar", "profile_click")
+            st.switch_page("pages/profile.py")
+
+    else:
+        if st.button("Login / Signup"):
+            st.switch_page("pages/auth.py")
 
 def main():
     # Header Section

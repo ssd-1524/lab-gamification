@@ -4,12 +4,14 @@ from uuid import UUID
 from datetime import datetime
 import uuid
 
+from datetime import datetime
+import pytz
 from app.routers.deps import get_db, get_authenticated_user
 from app.models import schema
 from app.utils.auth import supabase
 from pydantic import BaseModel, EmailStr
 
-
+IST = pytz.timezone("Asia/Kolkata")
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
@@ -110,13 +112,16 @@ async def login(payload: UserLogin, db: Session = Depends(get_db)):
         db.query(schema.Sessions).filter(
             schema.Sessions.user_id == user_id,
             schema.Sessions.logout_time.is_(None),
-        ).update({"logout_time": datetime.utcnow()})
+        ).update({"logout_time": datetime.now(IST)})
 
         # 4. Create new active session
+        
+
         new_session = schema.Sessions(
             session_id=uuid.uuid4(),
             user_id=user_id,
             device="web",
+            login_time=datetime.now(IST),
         )
         db.add(new_session)
         db.commit()

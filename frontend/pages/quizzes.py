@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import Dict, List
 import random
+import time
 import requests
 import streamlit as st
 
 from utils.sessions import get_access_token, is_authenticated
-from utils.events import log_event   # 🔴 FIXED IMPORT
+from utils.events import log_event
 
 API_BASE_URL = "http://localhost:8000"
 
@@ -18,6 +19,33 @@ if not is_authenticated():
 # 🔴 PAGE VIEW EVENT
 log_event("quiz", "page_view")
 
+token = get_access_token()
+headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+# ------------------ DAILY QUIZ LOCK + TIMER ------------------ #
+
+quiz_status = requests.get(f"{API_BASE_URL}/quizzes/status", headers=headers)
+
+if quiz_status.status_code == 200 and quiz_status.json().get("completed", False):
+    st.subheader("⏳ Next Quiz Available In")
+
+    resp = requests.get(f"{API_BASE_URL}/quizzes/next-available", headers=headers)
+    if resp.status_code == 200:
+        remaining = resp.json()["seconds_remaining"]
+        timer_placeholder = st.empty()
+
+        while remaining > 0:
+            hrs, rem = divmod(remaining, 3600)
+            mins, secs = divmod(rem, 60)
+            timer_placeholder.metric(
+                label="Next Daily Quiz",
+                value=f"{hrs:02d}:{mins:02d}:{secs:02d}",
+            )
+            time.sleep(1)
+            remaining -= 1
+
+    st.stop()
+
 # ------------------ Helpers ------------------ #
 
 def fetch_random_question(question_type: str) -> Dict:
@@ -28,26 +56,6 @@ def fetch_random_question(question_type: str) -> Dict:
     )
     response.raise_for_status()
     return random.choice(response.json())
-
-
-def check_daily_quiz_status() -> bool:
-    """Check once per session whether today's quiz is completed"""
-    token = get_access_token()
-    if not token:
-        return True
-
-    headers = {"Authorization": f"Bearer {token}"}
-
-    response = requests.get(
-        f"{API_BASE_URL}/quizzes/status",
-        headers=headers,
-        timeout=5,
-    )
-
-    if response.status_code == 200:
-        return response.json().get("completed", False)
-
-    return True
 
 
 def initialize_quiz():
@@ -63,7 +71,6 @@ def initialize_quiz():
 
 
 def submit_quiz_score(score: int):
-    token = get_access_token()
     if not token:
         st.error("Authentication token missing.")
         return
@@ -83,19 +90,9 @@ def submit_quiz_score(score: int):
     if response.status_code != 200:
         st.error("Failed to save quiz score")
 
-
 # ------------------ Page Header ------------------ #
 
 st.title("🧪 Daily Quiz")
-
-# ------------------ Daily Quiz Lock (ONCE) ------------------ #
-
-if "daily_quiz_completed" not in st.session_state:
-    st.session_state.daily_quiz_completed = check_daily_quiz_status()
-
-if st.session_state.daily_quiz_completed:
-    st.warning("🚫 Daily Quiz is Already Completed")
-    st.stop()
 
 # ------------------ Initialize Quiz ------------------ #
 
@@ -128,33 +125,30 @@ with st.form(key=f"quiz_form_{idx}"):
 # ------------------ Submission Logic ------------------ #
 
 if submitted:
-    log_event("quiz", "submit_click")  # 🔴 ADDED
+    log_event("quiz", "submit_click")
 
     correct = selected_label == current_question["correct_option"]
 
     if correct:
         st.session_state.score += 10
 
-    token = get_access_token()
-    if token:
-        log_event(
-            token=token,
-            payload={
-                "feature": "quiz",
-                "action": "answer",
-                "metadata": {
-                    "question_id": current_question["question_id"],
-                    "question_type": current_question["question_type"],
-                    "selected": selected_label,
-                    "correct": correct,
-                },
-            },
-        )
+    log_event(
+        "quiz",
+        "answer_selected",
+        {
+            "question_id": current_question["question_id"],
+            "question_type": current_question["question_type"],
+            "selected": selected_label,
+            "correct": correct,
+        },
+    )
 
     if idx < 2:
         st.session_state.current_index += 1
+        st.experimental_rerun()
     else:
         st.session_state.completed = True
+        st.experimental_rerun()
 
 # ------------------ Quiz Completed ------------------ #
 
@@ -164,21 +158,19 @@ if st.session_state.get("completed"):
 
     if not st.session_state.points_saved:
         submit_quiz_score(st.session_state.score)
-        log_event("quiz", "completed", {"final_score": st.session_state.score})  # 🔴 ADDED
+        log_event("quiz", "completed", {"final_score": st.session_state.score})
         st.session_state.points_saved = True
     else:
-        log_event("quiz", "submit_blocked", {"reason": "points_saved_guard"})  # 🔴 ADDED
-        st.session_state.daily_quiz_completed = True
+        log_event("quiz", "submit_blocked", {"reason": "points_saved_guard"})
 
     if st.button("Go to Dashboard"):
-        log_event("dashboard", "go_click")  # 🔴 ADDED
+        log_event("dashboard", "go_click")
         for key in [
             "quiz_questions",
             "current_index",
             "score",
             "completed",
             "points_saved",
-            "daily_quiz_completed",
         ]:
             st.session_state.pop(key, None)
 

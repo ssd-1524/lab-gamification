@@ -9,11 +9,12 @@ from app.routers.deps import get_db
 from app.models.schema import Event
 from app.routers.deps import get_authenticated_user
 from app.schemas.event import EventCreate
-
+import pytz
+from datetime import datetime
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
-
+IST = pytz.timezone("Asia/Kolkata")
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_event(
     payload: EventCreate,
@@ -41,6 +42,7 @@ def create_event(
             plan_id=user["plan_id"],
             feature=payload.feature,
             action=payload.action,
+            timestamp=datetime.now(IST),
             event_metadata=payload.metadata,
         )
 

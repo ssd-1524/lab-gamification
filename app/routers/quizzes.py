@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from typing import Dict, List
-from datetime import date
+from datetime import datetime, timedelta, date
 from uuid import uuid4, UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text
 from uuid import uuid4
 
+from datetime import datetime
 from app.routers.deps import get_authenticated_user, get_db
 from app.models.schema import (
     PointWallet,
@@ -16,8 +17,11 @@ from app.models.schema import (
     Location,
     Question,
     Users,
+    Event
 )
 
+import pytz
+IST = pytz.timezone("Asia/Kolkata")
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
 
@@ -79,25 +83,25 @@ def complete_quiz(
     Persist quiz score into pointwallet and pointhistory
     """
 
-    user_id = UUID(user["sub"])  # ✅ MOVED UP (FIX)
+    user_id = user["user_id"]
     today = date.today()
 
     # ✅ USER-SCOPED DAILY CHECK (FIX)
-    already_completed = (
-        db.query(PointHistory)
-        .filter(
-            PointHistory.user_id == user_id,     # ✅ per-user
-            PointHistory.source == "Quiz",
-            func.date(PointHistory.timestamp) == today,
-        )
-        .first()
-    )
+    already_done = db.execute(
+        text("""
+            SELECT EXISTS (
+                SELECT 1 FROM events
+                WHERE user_id = :user_id
+                AND feature = 'quiz'
+                AND action = 'completed'
+                AND timestamp::date = CURRENT_DATE
+            );
+        """),
+        {"user_id": user["user_id"]},
+    ).scalar()
 
-    if already_completed:
-        raise HTTPException(
-            status_code=400,
-            detail="Daily quiz already completed",
-        )
+    if already_done:
+        raise HTTPException(status_code=400, detail="Daily quiz already completed")
 
     score = payload.get("score")
 
@@ -134,6 +138,17 @@ def complete_quiz(
         )
         db.add(wallet)
 
+    # 3️⃣ Insert quiz completed event (THIS WAS MISSING)
+    event = Event(
+        event_id=uuid4(),
+        user_id=user["user_id"],
+        session_id=user["session_id"],
+        plan_id=user["plan_id"],
+        feature="quiz",
+        action="completed",
+        timestamp=datetime.now(IST),
+    )
+    db.add(event)
     db.commit()
 
     return {
@@ -143,25 +158,39 @@ def complete_quiz(
     }
 
 
+
 @router.get("/status")
-def quiz_status(
-    user: dict = Depends(get_authenticated_user),
+def get_today_quiz_status(
+    identity: dict = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
 ):
-    user_id = UUID(user["sub"])
-    today = date.today()
+    user_id = identity["user_id"]
 
-    # ✅ USER-SCOPED STATUS CHECK (CORRECT)
-    quiz_done_today = (
-        db.query(PointHistory)
-        .filter(
-            PointHistory.user_id == user_id,
-            PointHistory.source == "Quiz",
-            func.date(PointHistory.timestamp) == today,
-        )
-        .first()
+    result = db.execute(
+        text("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM events
+                WHERE user_id = :user_id
+                  AND feature = 'quiz'
+                  AND action = 'completed'
+                  AND timestamp::date = CURRENT_DATE
+            );
+        """),
+        {"user_id": user_id},
+    ).scalar()
+
+    return {"completed": bool(result)}
+
+@router.get("/next-available")
+def get_next_quiz_time():
+    now = datetime.now(IST)
+    tomorrow = (now + timedelta(days=1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
     )
+    remaining = int((tomorrow - now).total_seconds())
 
     return {
-        "completed": bool(quiz_done_today)
+        "seconds_remaining": remaining,
+        "next_quiz_at": tomorrow.isoformat()
     }
