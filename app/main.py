@@ -16,7 +16,8 @@ from app.routers import (
     sessions, 
     users, 
     roles,     # For fetching role strings
-    location   # For fetching location strings
+    location,
+    bonus   # For fetching location strings
 )
 from app.config import get_settings
 
@@ -53,7 +54,7 @@ app.include_router(sessions.router)
 app.include_router(quizzes.router)
 app.include_router(badges.router)
 app.include_router(questions.router)
-
+app.include_router(bonus.router)
 # ---------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------
