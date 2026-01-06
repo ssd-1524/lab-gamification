@@ -6,8 +6,21 @@ from utils.events import log_event
 st.set_page_config(
     page_title="Stomata Labs Gamification",
     page_icon="🌱",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed",
 )
+
+if not is_authenticated():
+    st.markdown("""
+    <style>
+    /* Hide entire sidebar including collapse button before auth */
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
 
 # 2. Initialize Session State (This persists across all pages)
 if "is_authenticated" not in st.session_state:
@@ -15,33 +28,29 @@ if "is_authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state.user = None
 
-with st.sidebar:
-    st.markdown("## 🧪 Stomata Labs")
+if is_authenticated():
+    with st.sidebar:
+        st.markdown("## 🧪 Stomata Labs")
 
-    if is_authenticated():
-        if st.button("Dashboard"):
+        if st.button("📊 Dashboard"):
             log_event("sidebar", "dashboard_click")
             st.switch_page("pages/dashboard.py")
 
-        if st.button("Daily Quiz"):
+        if st.button("🧪 Daily Quiz"):
             log_event("sidebar", "quiz_click")
             st.switch_page("pages/quizzes.py")
 
-        if st.button("Leaderboard"):
+        if st.button("🏆 Leaderboard"):
             log_event("sidebar", "leaderboard_click")
             st.switch_page("pages/leaderboard.py")
 
-        if st.button("Guides"):
+        if st.button("📖 Guides"):
             log_event("sidebar", "guides_click")
             st.switch_page("pages/guides.py")
 
-        if st.button("Profile"):
+        if st.button("👤 Profile"):
             log_event("sidebar", "profile_click")
             st.switch_page("pages/profile.py")
-
-    else:
-        if st.button("Login / Signup"):
-            st.switch_page("pages/auth.py")
 
 def main():
     # Header Section

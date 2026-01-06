@@ -21,6 +21,9 @@ log_event("quiz", "page_view")
 
 token = get_access_token()
 headers = {"Authorization": f"Bearer {token}"} if token else {}
+if st.session_state.user.get("role_name") in ("HR", "Admin"):
+    st.warning("🚫 Quizzes are not available for your role.")
+    st.stop()
 
 # ------------------ DAILY QUIZ LOCK + TIMER ------------------ #
 

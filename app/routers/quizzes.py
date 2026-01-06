@@ -2,14 +2,12 @@ from __future__ import annotations
 
 from typing import Dict, List
 from datetime import datetime, timedelta, date
-from uuid import uuid4, UUID
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
-from uuid import uuid4
-
-from datetime import datetime
+from app.models import schema
 from app.routers.deps import get_authenticated_user, get_db
 from app.models.schema import (
     PointWallet,
@@ -24,6 +22,15 @@ import pytz
 IST = pytz.timezone("Asia/Kolkata")
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
+ROLE_MAP = {
+    "Operator": "Operator",
+    "Executive": "Executive",
+    "Manager": "Manager",
+    "Viewer": "Viewer",
+    "ViewerReport": "Viewer",
+    "ViewerSPC": "Viewer",
+    "ViewerReportSPC": "Viewer",
+}
 
 @router.get("/today")
 def get_today_quiz(
@@ -45,10 +52,24 @@ def get_today_quiz(
         Question.question_type == "Sugarcane"
     ).all()
 
+    user_role = db.query(schema.Role.role_name).filter(
+        schema.Role.role_id == db_user.role_id
+    ).scalar()
+
+    mapped_role = ROLE_MAP.get(user_role)
+
+    if not mapped_role:
+        return {"questions": []}  # HR / Admin
+
+    role_id = db.query(schema.Role.role_id).filter(
+        schema.Role.role_name == mapped_role
+    ).scalar()
+
     role_qs = db.query(Question).filter(
         Question.question_type == "Role",
-        Question.role_id == db_user.role_id,
+        Question.role_id == role_id,
     ).all()
+
 
     plan_qs = db.query(Question).filter(
         Question.question_type == "Plan",

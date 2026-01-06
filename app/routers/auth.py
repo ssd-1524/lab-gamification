@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from uuid import UUID
+from uuid import UUID, uuid4
+from sqlalchemy import text
 from datetime import datetime
 import uuid
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from app.routers.deps import get_db, get_authenticated_user
 from app.models import schema
@@ -124,6 +125,45 @@ async def login(payload: UserLogin, db: Session = Depends(get_db)):
             login_time=datetime.now(IST),
         )
         db.add(new_session)
+        db.commit()
+
+        # ---- LOGIN STREAK BONUS ----
+        streak_row = db.execute(
+            text("SELECT streak FROM login_streak_view WHERE user_id = :uid"),
+            {"uid": user_id},
+        ).fetchone()
+
+        if streak_row and streak_row.streak >= 1:
+            wallet = db.query(schema.PointWallet).filter(
+                schema.PointWallet.user_id == user_id
+            ).first()
+
+            if wallet:
+                wallet.total_points += 5
+
+                db.add(schema.PointHistory(
+                    id=uuid4(),
+                    user_id=user_id,
+                    points=5,
+                    source="Streak",
+                ))
+
+                # Fetch real plan_id from locations table
+                plan_id = db.query(schema.Location.plan_id).filter(
+                    schema.Location.loc_id == user_profile.loc_id
+                ).scalar()
+
+                db.add(schema.Event(
+                    event_id=uuid4(),
+                    user_id=user_id,
+                    session_id=new_session.session_id,
+                    plan_id=plan_id,
+                    feature="streak",
+                    action="bonus_awarded",
+                    timestamp=datetime.now(IST),
+                ))
+
+
         db.commit()
 
         return {

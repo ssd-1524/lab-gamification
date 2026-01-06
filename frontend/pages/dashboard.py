@@ -47,6 +47,19 @@ st.info(
 st.divider()
 
 # 4. Key Metrics
+streak_resp = requests.get("http://localhost:8000/sessions/streak", headers=headers)
+streak = streak_resp.json().get("streak", 0) if streak_resp.status_code == 200 else 0
+
+st.metric("🔥 Login Streak", f"{streak} days")
+
+rank_resp = requests.get(
+    "http://localhost:8000/users/me/rank",
+    headers=headers,
+)
+
+rank_data = rank_resp.json() if rank_resp.status_code == 200 else {}
+
+
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -58,15 +71,17 @@ with col1:
     log_event("wallet", "view", {"total_points": points_data.get("total_points", 0)})
 
 with col2:
-    st.metric(label="Global Rank", value="#--")
+    pos = rank_data.get("position")
+    st.metric("Rank", f"{pos}" if pos else "—")
 
 with col3:
     st.metric(
         label="Current Tier",
-        value=points_data.get("rank", "Bronze"),
-        delta="Tier Progress",
+        value=rank_data.get("rank") or "—",
     )
-    log_event("wallet", "rank_view", {"rank": points_data.get("rank", "Bronze")})
+
+    if rank_data.get("badge_image"):
+        st.image(rank_data["badge_image"], width=48)
 
 st.divider()
 

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Dict
 
+from sqlalchemy import text
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
 
 from app.models.schema import PointWallet, Sessions, Users
 from app.routers.deps import get_db
@@ -78,4 +80,70 @@ def get_me(
         "name": db_user.name,
         "role_id": str(db_user.role_id),
         "loc_id": str(db_user.loc_id),
+    }
+
+@router.get("/leaderboard")
+def get_leaderboard(
+    identity: dict = Depends(get_authenticated_user),
+    db: Session = Depends(get_db),
+):
+    uid = identity["user_id"]
+
+    rows = db.execute(
+        text("""
+            SELECT *,
+                   (user_id = :uid) AS is_me
+            FROM leaderboard_view
+            ORDER BY total_points DESC, updated_at ASC
+            LIMIT 20;
+        """),
+        {"uid": uid},
+    ).fetchall()
+
+    return [
+        {
+            "name": r.name,
+            "points": r.total_points,
+            "rank": r.rank,
+            "badge_image": r.badge_image,
+            "is_me": bool(r.is_me),
+        }
+        for r in rows
+    ]
+
+@router.get("/me/rank")
+def get_my_rank(
+    identity: dict = Depends(get_authenticated_user),
+    db: Session = Depends(get_db),
+):
+    uid = identity["user_id"]
+
+    row = db.execute(
+        text("""
+            SELECT rank, badge_image, total_points
+            FROM leaderboard_view
+            WHERE user_id = :uid
+        """),
+        {"uid": uid},
+    ).fetchone()
+
+    position = db.execute(
+        text("""
+            SELECT COUNT(*) + 1
+            FROM leaderboard_view
+            WHERE total_points > (
+                SELECT total_points FROM leaderboard_view WHERE user_id = :uid
+            )
+        """),
+        {"uid": uid},
+    ).scalar()
+
+    if not row:
+        return {"rank": None, "badge_image": None, "points": 0, "position": None}
+
+    return {
+        "rank": row.rank,
+        "badge_image": row.badge_image,
+        "points": row.total_points,
+        "position": int(position or 1),
     }
