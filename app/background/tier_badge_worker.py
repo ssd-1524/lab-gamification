@@ -1,6 +1,7 @@
 import time
 from app.utils.supabase_client import supabase_client
 from app.services.tier_badge_service import process_tier_badge_for_user
+from app.services.rank_service import sync_rank_from_tier_badge
 
 SLEEP_SECONDS = 30
 
@@ -20,6 +21,7 @@ def run_tier_badge_worker():
                     continue
                 try:
                     process_tier_badge_for_user(uid)
+                    sync_rank_from_tier_badge(uid)
                 except Exception as e:
                     print(f"⚠️ user {uid}: {e}")
         except Exception as e:
