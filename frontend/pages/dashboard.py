@@ -46,12 +46,11 @@ st.info(f"📍 **Location:** {user.get('loc_name')} | 🛠️ **Role:** {user.ge
 st.divider()
 
 # ---------------- Metrics ---------------- #
-st.metric("🌱 Login Streak", f"{streak} days")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Total Points", f"{points_data.get('total_points', 0)} pts")
+    st.metric("Total Points", f"{rank_data.get('points', 0)} pts")
     log_event("wallet", "view")
 
 with col2:

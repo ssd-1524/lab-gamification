@@ -13,7 +13,7 @@ router = APIRouter(
 
 # ---------------- Profile API ---------------- #
 
-@router.get("/me")
+@router.get("/me/details")
 def get_my_profile(
     user: dict = Depends(get_authenticated_user),
     db: Session = Depends(get_db),

@@ -24,7 +24,7 @@ def fetch_profile() -> Dict[str, Any]:
     headers = {"Authorization": f"Bearer {get_access_token()}"}
 
     response = requests.get(
-        f"{API_BASE_URL}/profile/me",
+        f"{API_BASE_URL}/profile/me/details",
         headers=headers,
         timeout=10,
     )
