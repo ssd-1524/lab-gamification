@@ -70,12 +70,15 @@ else:
             gap: 20px;
             width: 100%;
             margin-top: 10px;
+            padding-bottom: 200px;
+            border-radius: 16px;
         }
 
         .badge-card {
             perspective: 1000px;
             width: 100%;
             aspect-ratio: 1 / 1;
+            padding-bottom: 20px;
         }
 
         .badge-card-inner {
