@@ -8,11 +8,6 @@ router = APIRouter(
     tags=["Profile"],
 )
 
-
-# ---------------- DB Dependency ---------------- #
-
-get_db()
-
 # ---------------- Profile API ---------------- #
 
 @router.get("/me")
@@ -41,6 +36,17 @@ def get_my_profile(
     total_points = wallet_row.total_points if wallet_row else 0
     rank = wallet_row.rank if wallet_row else None
 
+    user_row = db.execute(
+        text("""
+            SELECT name
+            FROM users
+            WHERE user_id = :user_id
+        """),
+        {"user_id": user_id},
+    ).fetchone()
+
+    user_name = user_row.name if user_row else "User"
+
     # ---------------- Badges ---------------- #
     badge_rows = db.execute(
         text("""
@@ -66,15 +72,40 @@ def get_my_profile(
         for row in badge_rows
     ]
 
+    # ---------------- Points History ---------------- #
+    points_rows = db.execute(
+        text("""
+            SELECT
+                points,
+                source as reason,
+                timestamp as created_at
+            FROM pointhistory
+            WHERE user_id = :user_id
+            ORDER BY created_at DESC
+            LIMIT 5
+        """),
+        {"user_id": user_id},
+    ).fetchall()
+
+    points_history = [
+        {
+            "points": row.points,
+            "reason": row.reason,
+            "date": row.created_at.strftime("%d %b %Y"),
+        }
+        for row in points_rows
+    ]
+
     # ---------------- Final Payload ---------------- #
     return {
         "user": {
             "user_id": user_id,
-            "name": user.get("name"),
+            "name": user_name,
         },
         "wallet": {
             "total_points": total_points,
             "rank": rank,
         },
         "badges": badges,
+        "points_history": points_history,
     }

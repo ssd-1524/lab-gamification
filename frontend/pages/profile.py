@@ -37,8 +37,7 @@ user = profile["user"]
 
 # ------------------ UI ------------------ #
 
-st.title("👤 My Profile")
-st.write(f"**Name:** {user['name']}")
+st.title(f"👤 {user['name']}")
 
 # ------------------ Wallet ------------------ #
 
@@ -52,7 +51,6 @@ st.metric("Rank", wallet["rank"])
 log_event("wallet", "rank_view", {"rank": wallet["rank"]})
 
 # ------------------ Badges ------------------ #
-
 st.markdown("### 🏅 Badges Earned")
 
 badges = profile.get("badges", [])
@@ -66,10 +64,9 @@ else:
             box-sizing: border-box;
         }
 
-        /* ===== BADGE MATRIX ===== */
         .badge-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* MAX 4 COLUMNS */
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             width: 100%;
             margin-top: 10px;
@@ -78,7 +75,7 @@ else:
         .badge-card {
             perspective: 1000px;
             width: 100%;
-            aspect-ratio: 1 / 1; /* Keeps cards square */
+            aspect-ratio: 1 / 1;
         }
 
         .badge-card-inner {
@@ -123,7 +120,6 @@ else:
             font-family: 'Source Sans Pro', sans-serif;
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
             .badge-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -167,14 +163,22 @@ else:
         </div>
         """
 
-        # 🔴 Badge view event
         log_event("badge", "view", {"badge_name": badge_name})
 
     html += "</div>"
 
-    components.html(html, height=500, scrolling=False)
+    # 🔥 DYNAMIC HEIGHT CALCULATION (KEY FIX)
+    badges_per_row = 4
+    rows = (len(badges) + badges_per_row - 1) // badges_per_row
+    iframe_height = rows * 270  # ~220px per row
 
-st.markdown("### 🪙 Points History")
+    components.html(
+        html,
+        height=iframe_height,
+        scrolling=False,
+    )
+
+
 
 points_history = profile.get("points_history", [])
 
@@ -194,6 +198,7 @@ else:
         .points-title {
             font-weight: 600;
             font-size: 18px;
+            font-family: 'Source Sans Pro', sans-serif;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
@@ -213,6 +218,7 @@ else:
             text-align: left;
             font-weight: 600;
             font-size: 14px;
+            font-family: 'Source Sans Pro', sans-serif;
             color: #374151;
             padding: 10px;
             border-bottom: 1px solid #e5e7eb;
@@ -221,6 +227,7 @@ else:
         .points-table td {
             padding: 12px 10px;
             font-size: 14px;
+            font-family: 'Source Sans Pro', sans-serif;
             border-bottom: 1px solid #f1f5f9;
         }
 
