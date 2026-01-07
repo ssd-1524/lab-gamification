@@ -178,9 +178,10 @@ if st.session_state.anomaly_active:
         if st.button(f"Resolve Anomaly (+{points} pts)", key=resolve_key):
             resolved_at = datetime.now(IST)
             detected_at = st.session_state.anomaly_start_ts
-            response_time = (
-                (resolved_at - detected_at).total_seconds() if detected_at else None
-            )
+            if detected_at:
+                response_time = round((resolved_at - detected_at).total_seconds(), 2)
+            else:
+                response_time = 99999  # force non-qualifying response time instead of NULL
 
             # log resolved
             try:

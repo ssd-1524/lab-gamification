@@ -48,7 +48,7 @@ class BadgeService:
             WHERE user_id = :user_id
             AND feature = 'anomaly'
             AND action = 'accepted'
-            AND (metadata->>'response_time_sec')::int <= :max_seconds
+            AND (metadata->>'response_time_sec')::numeric <= :max_seconds
             LIMIT 1
         """)
 
