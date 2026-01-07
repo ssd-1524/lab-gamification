@@ -24,7 +24,7 @@ def get_locations():
 
 def signup_user(payload: dict):
     try:
-        r = requests.post(f"{API_BASE_URL}/auth/signup/", json=payload, timeout=10)
+        r = requests.post(f"{API_BASE_URL}/auth/signup", json=payload, timeout=10)
         return r.json()
     except Exception as e:
         return {"status": "error", "detail": str(e)}
@@ -32,7 +32,7 @@ def signup_user(payload: dict):
 
 def login_user(payload: dict):
     try:
-        r = requests.post(f"{API_BASE_URL}/auth/login/", json=payload, timeout=10)
+        r = requests.post(f"{API_BASE_URL}/auth/login", json=payload, timeout=10)
         return r.json()
     except Exception as e:
         return {"status": "error", "detail": str(e)}
