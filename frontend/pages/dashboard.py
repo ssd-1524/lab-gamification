@@ -82,7 +82,7 @@ if plant_state:
 
     with col_text:
         st.markdown(f"### {plant_state['message']}")
-        st.caption(f"🔥 Login Streak: {plant_state['streak']} days")
+        st.subheader(f"🔥 Login Streak: {plant_state['streak']} days")
 
         if plant_state["can_replant"]:
             if st.button("🌱 Plant seed again", type="secondary"):
