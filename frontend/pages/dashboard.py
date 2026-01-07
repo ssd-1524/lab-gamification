@@ -40,71 +40,113 @@ rank_resp = requests.get(f"{API_BASE_URL}/users/me/rank", headers=headers)
 rank_data = rank_resp.json() if rank_resp.status_code == 200 else {}
 
 # ---------------- Header ---------------- #
-st.title(f"👋 Welcome, {user['name']}!")
-st.info(f"📍 **Location:** {user.get('loc_name')} | 🛠️ **Role:** {user.get('role_name')}")
+st.markdown("## 👋 Welcome back")
+st.markdown(f"### **{user['name']}**")
+
+with st.container(border=True):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("📍 **Location**")
+        st.markdown(user.get("loc_name", "—"))
+
+    with col2:
+        st.markdown("🛠️ **Role**")
+        st.markdown(user.get("role_name", "—"))
 
 st.divider()
 
+
 # ---------------- Metrics ---------------- #
 
-col1, col2, col3 = st.columns(3)
+with st.container(border=True):
+    col1, col2, col3 = st.columns(3)
 
-with col1:
-    st.metric("Total Points", f"{rank_data.get('points', 0)} pts")
-    log_event("wallet", "view")
+    # -------- Total Points --------
+    with col1:
+        st.markdown("### 🪙 Total Points")
+        st.markdown(f"## **{rank_data.get('points', 0)} pts**")
+        log_event("wallet", "view")
 
-with col2:
-    pos = rank_data.get("position")
-    st.metric("Rank", f"#{pos}" if pos else "—")
+    # -------- Rank --------
+    with col2:
+        pos = rank_data.get("position")
+        st.markdown("### 🏆 Rank")
+        st.markdown(f"## **{pos}**" if pos else "## —")
 
-with col3:
-    st.metric("Current Tier", rank_data.get("rank") or "—")
-    if rank_data.get("badge_image"):
-        st.image(rank_data["badge_image"], width=48)
+    # -------- Tier + Badge (Side by Side) --------
+    with col3:
+        st.markdown("### 🎖️ Current Tier")
+
+        badge_col, tier_col = st.columns([1, 4], gap="small")
+
+        with badge_col:
+            if rank_data.get("badge_image"):
+                st.image(
+                    rank_data["badge_image"],
+                    width=56
+                )
+
+        with tier_col:
+            st.markdown(f"## **{rank_data.get('rank') or '—'}**")
+
 
 st.divider()
 
 # ---------------- Plant Growth Gamification ---------------- #
-st.subheader("🌱 Your Growth Journey")
+with st.container(border=True):
+    st.markdown("## 🌱 Your Growth Journey")
 
-plant_state = get_plant_state()
+    plant_state = get_plant_state()
 
-if plant_state:
-    col_img, col_text = st.columns([2, 3])
+    if plant_state:
+        col_img, col_text = st.columns([2, 3], vertical_alignment="center")
 
-    with col_img:
-        st.image(
-        plant_state["image_url"],
-        width=300
-)
+        # -------- Plant Image --------
+        with col_img:
+            st.image(
+                plant_state["image_url"],
+                width=280
+            )
 
+        # -------- Text Content --------
+        with col_text:
+            st.markdown(f"### {plant_state['message']}")
+            st.markdown(f"#### 🔥 Login Streak: **{plant_state['streak']} days**")
 
-    with col_text:
-        st.markdown(f"### {plant_state['message']}")
-        st.subheader(f"🔥 Login Streak: {plant_state['streak']} days")
+            st.markdown("<br>", unsafe_allow_html=True)
 
-        if plant_state["can_replant"]:
-            if st.button("🌱 Plant seed again", type="secondary"):
-                log_event("plant", "replant_clicked")
-                st.success("A new seed has been planted 🌱 Come back tomorrow!")
-                st.rerun()
-else:
-    st.info("🌱 Your plant will appear once you start your journey!")
+            if plant_state["can_replant"]:
+                if st.button("🌱 Plant seed again", type="secondary"):
+                    log_event("plant", "replant_clicked")
+                    st.success("A new seed has been planted 🌱 Come back tomorrow!")
+                    st.rerun()
+
+    else:
+        st.info("🌱 Your plant will appear once you start your journey!")
 
 st.divider()
 
 # ---------------- Guides ---------------- #
 st.subheader("📖 Feature Guides")
+
 cols = st.columns(len(FEATURE_GUIDES))
 
 for idx, (key, data) in enumerate(FEATURE_GUIDES.items()):
     with cols[idx]:
-        if st.button(f"🎯 {data['title']}\n{data['subtitle']}", key=f"guide_btn_{key}"):
+
+        if st.button(
+            f"🎯 {data['title']}\n\n{data['subtitle']}",
+            key=f"guide_btn_{key}",
+            use_container_width=True
+        ):
             log_event("guides", "open_from_dashboard", {"guide": key})
             st.session_state.selected_guide = key
             st.switch_page("pages/guides.py")
 
 st.divider()
+
+
 
 # ---------------- Quiz Popup / Timer ---------------- #
 if quiz_completed:
