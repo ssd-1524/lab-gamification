@@ -1,107 +1,140 @@
 from __future__ import annotations
 
+import time
 import requests
 import streamlit as st
 from datetime import datetime
+import pytz
+
 from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
 
+IST = pytz.timezone("Asia/Kolkata")
 API_BASE = "http://localhost:8000"
+
+st.set_page_config(page_title="Anomaly Detection", layout="wide")
 
 # ---------------- Guards ---------------- #
 if not is_authenticated():
     st.switch_page("pages/auth.py")
 
-st.set_page_config(page_title="Anomaly Detection", layout="wide")
-
 log_event("anomaly", "page_view")
-
-st.title("🚨 Anomaly Detection")
+st.title("🚨 Anomaly Detection – Live Feed")
 
 token = get_access_token()
 headers = {"Authorization": f"Bearer {token}"} if token else {}
 
-# ---------------- Fetch Stream ---------------- #
-resp = requests.get(f"{API_BASE}/anomaly/stream", headers=headers)
+# ---------------- Session State ---------------- #
+if "anomaly_active" not in st.session_state:
+    st.session_state.anomaly_active = False
 
-if resp.status_code != 200:
-    st.error("Unable to load anomaly stream.")
-    st.stop()
-
-data = resp.json()
-values = [d["value"] for d in data]
-timestamps = [d["ts"] for d in data]
-
-st.line_chart({"Sensor Value": values})
-
-latest = values[-1]
-
-# ---------------- Anomaly Detection Tracking ---------------- #
 if "anomaly_start_ts" not in st.session_state:
     st.session_state.anomaly_start_ts = None
 
-if latest > 80:
-    if st.session_state.anomaly_start_ts is None:
-        st.session_state.anomaly_start_ts = datetime.utcnow()
+if "anomaly_event_id" not in st.session_state:
+    st.session_state.anomaly_event_id = None
 
-        log_event(
-            "anomaly",
-            "detected",
-            {"value": latest},
-        )
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = 0
 
-# ---------------- Mock Recommendation ---------------- #
-if latest > 95:
-    severity = "High"
-    points = 20
-elif latest > 80:
-    severity = "Medium"
-    points = 10
-else:
-    severity = "Low"
-    points = 5
+chart_box = st.empty()
+rec_box = st.empty()
+status_box = st.empty()
 
-st.subheader("⚠️ Recommendation")
-st.write(f"Detected **{severity}** severity anomaly. Suggested action: *Reset process valve*.")
+# ---------------- Refresh Gate ---------------- #
+if time.time() - st.session_state.last_refresh < 10:
+    time.sleep(1)
+    st.stop()
 
-col1, col2 = st.columns(2)
+st.session_state.last_refresh = time.time()
 
-with col1:
-    if st.button(f"Resolve Anomaly (+{points} pts)"):
-        detected_at = st.session_state.anomaly_start_ts
-        resolved_at = datetime.utcnow()
+# ---------------- Fetch Stream ---------------- #
+resp = requests.get(f"{API_BASE}/anomaly/stream", headers=headers)
 
-        response_time = None
-        if detected_at:
-            response_time = (resolved_at - detected_at).total_seconds()
+if resp.status_code == 403:
+    status_box.error("Upgrade to Prime or Nexus to access Anomaly Detection.")
+    st.stop()
 
-        log_event(
-            "anomaly",
-            "resolved",
-            {
-                "severity": severity,
-                "response_time_sec": response_time,
-            },
-        )
+if resp.status_code != 200:
+    status_box.error("Unable to load anomaly stream.")
+    st.stop()
 
-        requests.post(
-            f"{API_BASE}/bonus/reward",
-            headers=headers,
-            json={
-                "feature": "anomaly",
-                "points": points,
-                "metadata": {
-                    "severity": severity,
-                    "response_time_sec": response_time,
-                },
-            },
-        )
+data = resp.json()
+values = [x["value"] for x in data]
 
-        st.session_state.anomaly_start_ts = None
-        st.success(f"Bonus +{points} points awarded!")
+with chart_box:
+    st.line_chart({"Sensor Value": values})
 
-with col2:
-    if st.button("Ignore"):
-        log_event("anomaly", "ignored", {"severity": severity})
-        st.session_state.anomaly_start_ts = None
-        st.info("Anomaly ignored.")
+latest = values[-1]
+
+# ---------------- Anomaly State Machine ---------------- #
+if latest > 80 and not st.session_state.anomaly_active:
+    st.session_state.anomaly_active = True
+    st.session_state.anomaly_start_ts = datetime.now(IST)
+    st.session_state.anomaly_event_id = int(st.session_state.anomaly_start_ts.timestamp())
+
+    log_event("anomaly", "detected", {"value": latest})
+
+# ---------------- Recommendation Logic ---------------- #
+if st.session_state.anomaly_active:
+    if latest > 95:
+        severity, points = "High", 20
+    else:
+        severity, points = "Medium", 10
+
+    anomaly_key = st.session_state.anomaly_event_id
+
+    with rec_box.container(border=True):
+        st.subheader("⚠️ Recommendation")
+        st.write(f"Detected **{severity}** anomaly. Suggested action: *Reset process valve*.")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button(f"Resolve Anomaly (+{points} pts)", key=f"resolve_{anomaly_key}"):
+                resolved_at = datetime.now(IST)
+                detected_at = st.session_state.anomaly_start_ts
+
+                response_time = (
+                    (resolved_at - detected_at).total_seconds()
+                    if detected_at else None
+                )
+
+                log_event(
+                    "anomaly",
+                    "resolved",
+                    {
+                        "severity": severity,
+                        "response_time_sec": response_time,
+                    },
+                )
+
+                requests.post(
+                    f"{API_BASE}/bonus/reward",
+                    headers=headers,
+                    json={
+                        "feature": "anomaly",
+                        "points": points,
+                        "metadata": {
+                            "severity": severity,
+                            "response_time_sec": response_time,
+                        },
+                    },
+                )
+
+                st.session_state.anomaly_active = False
+                st.session_state.anomaly_start_ts = None
+                st.session_state.anomaly_event_id = None
+                st.success(f"Bonus +{points} points awarded!")
+
+        with col2:
+            if st.button("Ignore", key=f"ignore_{anomaly_key}"):
+                log_event("anomaly", "ignored", {"severity": severity})
+                st.session_state.anomaly_active = False
+                st.session_state.anomaly_start_ts = None
+                st.session_state.anomaly_event_id = None
+                st.info("Anomaly ignored.")
+
+# ---------------- Auto Refresh ---------------- #
+time.sleep(1)
+st.rerun()
