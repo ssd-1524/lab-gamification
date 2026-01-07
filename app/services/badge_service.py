@@ -9,6 +9,7 @@ class BadgeService:
     This service is called ONLY from background workers.
     """
     CLUTCH_COMMANDER_MAX_RESPONSE_SEC = 1800
+    OPTIMIZER_FAST_RESPONSE_MAX_SEC = 1800   # 30 minutes
     LOGIN_STREAK_REQUIRED_DAYS = 10
     QUIZ_MASTER_REQUIRED_DAYS = 5
     QUIZ_MAX_SCORE = 30
@@ -24,6 +25,7 @@ class BadgeService:
         self._evaluate_quiz_master_badge(user_id)
         self._evaluate_monthly_mvp_badge(user_id)
         self._evaluate_clutch_commander_badge(user_id)
+        self._evaluate_smooth_operator_badge(user_id)
 
     # ==================================================
     # CLUTCH COMMANDER BADGE
@@ -168,6 +170,18 @@ class BadgeService:
 
         self._award_badge(user_id, badge_id)
 
+    def _evaluate_smooth_operator_badge(self, user_id: UUID) -> None:
+        if not self._has_fast_optimizer_response(user_id):
+            return
+
+        badge_id = self._get_badge_id_by_name("Smooth Operator")
+        if not badge_id:
+            return
+
+        if self._user_already_has_badge(user_id, badge_id):
+            return
+
+        self._award_badge(user_id, badge_id)
 
 
     # ==================================================
@@ -252,3 +266,25 @@ class BadgeService:
         """)
 
         return bool(self.db.execute(query).scalar())
+
+    def _has_fast_optimizer_response(self, user_id: UUID) -> bool:
+        query = text("""
+            SELECT 1
+            FROM events
+            WHERE user_id = :user_id
+            AND feature = 'optimizer'
+            AND action = 'accepted'
+            AND (metadata->>'response_time_sec')::numeric <= :max_seconds
+            LIMIT 1
+        """)
+
+        return (
+            self.db.execute(
+                query,
+                {
+                    "user_id": user_id,
+                    "max_seconds": self.OPTIMIZER_FAST_RESPONSE_MAX_SEC,
+                },
+            ).fetchone()
+            is not None
+        )

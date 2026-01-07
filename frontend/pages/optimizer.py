@@ -21,10 +21,6 @@ st.set_page_config(page_title="Optimizer", layout="wide")
 if not is_authenticated():
     st.switch_page("pages/auth.py")
 
-# === Auto-refresh ===
-REFRESH_INTERVAL_MS = 10_000  # 10s
-st_autorefresh(interval=REFRESH_INTERVAL_MS, key="optimizer_autorefresh")
-
 # === Session state defaults ===
 st.session_state.setdefault("optimizer_page_view_logged", False)
 st.session_state.setdefault("optimizer_cache", {"ts": [], "eff": [], "cost": [], "throughput": []})
@@ -34,6 +30,12 @@ st.session_state.setdefault("opt_suggestion_active", False)
 st.session_state.setdefault("opt_suggestion_start_ts", None)
 st.session_state.setdefault("opt_suggestion_key", None)
 st.session_state.setdefault("opt_suggestion_payload", None)  # store the suggestion dict
+
+# === Auto-refresh ===
+REFRESH_INTERVAL_MS = 10_000  # 10s
+# pause auto-refresh while a suggestion is active so button clicks aren't lost
+if not st.session_state.opt_suggestion_active:
+    st_autorefresh(interval=REFRESH_INTERVAL_MS, key="optimizer_autorefresh")
 
 # === Page view event (once) ===
 if not st.session_state.optimizer_page_view_logged:
@@ -87,17 +89,24 @@ try:
             }
             st.session_state.last_fetch_ok = True
             st.session_state.last_fetch_time = datetime.now(IST).isoformat()
-            # If suggestion found in latest point and not already active, set active
-            if suggestion_obj and not st.session_state.opt_suggestion_active:
+
+            # Persist suggestion across reruns (important)
+            if suggestion_obj:
+                # set start timestamp only once per suggestion activation
+                if not st.session_state.opt_suggestion_active:
+                    st.session_state.opt_suggestion_start_ts = datetime.now(IST)
+                    st.session_state.opt_suggestion_key = int(st.session_state.opt_suggestion_start_ts.timestamp())
+                # keep suggestion active and persist payload so reruns don't lose it
                 st.session_state.opt_suggestion_active = True
-                st.session_state.opt_suggestion_start_ts = datetime.now(IST)
-                st.session_state.opt_suggestion_key = int(st.session_state.opt_suggestion_start_ts.timestamp())
                 st.session_state.opt_suggestion_payload = suggestion_obj
-                # log suggestion event (once)
+
+                # log suggestion event (once) — best-effort
+                # we keep this as fire-and-forget; it's non-critical telemetry
                 try:
                     log_event("optimizer", "suggested", {"suggestion": suggestion_obj})
                 except Exception:
                     pass
+
 except requests.RequestException as e:
     fetch_error = f"Stream request error: {e}"
 
@@ -162,17 +171,30 @@ if st.session_state.opt_suggestion_active and st.session_state.opt_suggestion_pa
         if st.button(f"Apply Optimization (+{points} pts)", key=accept_key):
             resolved_at = datetime.now(IST)
             detected_at = st.session_state.opt_suggestion_start_ts
-            response_time = None
+
             if detected_at:
-                response_time = (resolved_at - detected_at).total_seconds()
+                response_time = round((resolved_at - detected_at).total_seconds(), 2)
+            else:
+                response_time = 99999
 
-            # log accepted
+            # Synchronous guaranteed event POST (critical action)
             try:
-                log_event("optimizer", "accepted", {"suggestion": suggestion, "response_time_sec": response_time})
+                if token:
+                    requests.post(
+                        f"{API_BASE}/events/",
+                        headers=headers,
+                        json={
+                            "feature": "optimizer",
+                            "action": "accepted",
+                            "metadata": {"suggestion": suggestion, "response_time_sec": response_time},
+                        },
+                        timeout=3,
+                    )
             except Exception:
-                pass
+                # show a small message so you know if event logging failed
+                st.error("Failed to log optimization acceptance to server.")
 
-            # best-effort call to award bonus
+            # best-effort call to award bonus (as before)
             try:
                 if token:
                     requests.post(
@@ -186,7 +208,7 @@ if st.session_state.opt_suggestion_active and st.session_state.opt_suggestion_pa
                         timeout=3,
                     )
             except Exception:
-                pass
+                st.warning("Bonus call failed (best-effort).")
 
             # clear suggestion state
             st.session_state.opt_suggestion_active = False
@@ -198,10 +220,21 @@ if st.session_state.opt_suggestion_active and st.session_state.opt_suggestion_pa
 
     with c2:
         if st.button("Ignore Suggestion", key=ignore_key):
+            # Synchronous ignored event logging
             try:
-                log_event("optimizer", "ignored", {"suggestion": suggestion})
+                if token:
+                    requests.post(
+                        f"{API_BASE}/events/",
+                        headers=headers,
+                        json={
+                            "feature": "optimizer",
+                            "action": "ignored",
+                            "metadata": {"suggestion": suggestion},
+                        },
+                        timeout=3,
+                    )
             except Exception:
-                pass
+                st.error("Failed to log ignore action to server.")
 
             st.session_state.opt_suggestion_active = False
             st.session_state.opt_suggestion_start_ts = None
