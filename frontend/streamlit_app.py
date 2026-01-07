@@ -75,8 +75,7 @@ if is_authenticated():
 
 # -------- Main Page -------- #
 st.title("🌱 Welcome to Stomata Labs")
-st.subheader("Sugarcane & Maize Disease Detection Training")
-st.divider()
+st.subheader("Unlock the Agro-Industrial Potential of the Sugar Industry with AI")
 
 if st.session_state.is_authenticated:
     st.success(f"Welcome back, {st.session_state.user['name']}!")
@@ -94,12 +93,10 @@ if st.session_state.is_authenticated:
             st.rerun()
 
 else:
-    st.info("Please sign in to access your training and analytics features.")
-
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Login / Sign Up", type="primary", use_container_width=True):
             st.switch_page("pages/auth.py")
     with col2:
         if st.button("Learn More", use_container_width=True):
-            st.info("This platform helps sugar mill teams improve performance through AI-driven training.")
+            st.markdown("This platform helps sugar mill teams improve performance through AI-driven training.")
