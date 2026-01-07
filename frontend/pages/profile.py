@@ -24,7 +24,7 @@ def fetch_profile() -> Dict[str, Any]:
     headers = {"Authorization": f"Bearer {get_access_token()}"}
 
     response = requests.get(
-        f"{API_BASE_URL}/profile/me",
+        f"{API_BASE_URL}/profile/me/details",
         headers=headers,
         timeout=10,
     )
@@ -37,8 +37,7 @@ user = profile["user"]
 
 # ------------------ UI ------------------ #
 
-st.title("👤 My Profile")
-st.write(f"**Name:** {user.get('name', 'User')}")
+st.title(f"👤 {user['name']}")
 
 # ------------------ Wallet ------------------ #
 
@@ -52,7 +51,6 @@ st.metric("Rank", wallet["rank"])
 log_event("wallet", "rank_view", {"rank": wallet["rank"]})
 
 # ------------------ Badges ------------------ #
-
 st.markdown("### 🏅 Badges Earned")
 
 badges = profile.get("badges", [])
@@ -66,19 +64,21 @@ else:
             box-sizing: border-box;
         }
 
-        /* ===== BADGE MATRIX ===== */
         .badge-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* MAX 4 COLUMNS */
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             width: 100%;
             margin-top: 10px;
+            padding-bottom: 200px;
+            border-radius: 16px;
         }
 
         .badge-card {
             perspective: 1000px;
             width: 100%;
-            aspect-ratio: 1 / 1; /* Keeps cards square */
+            aspect-ratio: 1 / 1;
+            padding-bottom: 20px;
         }
 
         .badge-card-inner {
@@ -123,7 +123,6 @@ else:
             font-family: 'Source Sans Pro', sans-serif;
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
             .badge-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -167,9 +166,136 @@ else:
         </div>
         """
 
-        # 🔴 Badge view event
         log_event("badge", "view", {"badge_name": badge_name})
 
     html += "</div>"
 
-    components.html(html, height=500, scrolling=False)
+    # 🔥 DYNAMIC HEIGHT CALCULATION (KEY FIX)
+    badges_per_row = 4
+    rows = (len(badges) + badges_per_row - 1) // badges_per_row
+    iframe_height = rows * 270  # ~220px per row
+
+    components.html(
+        html,
+        height=iframe_height,
+        scrolling=False,
+    )
+
+
+
+points_history = profile.get("points_history", [])
+
+if not points_history:
+    st.info("No points history available yet.")
+else:
+    history_html = """
+    <style>
+        .points-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            padding: 16px;
+            margin-top: 10px;
+        }
+
+        .points-title {
+            font-weight: 600;
+            font-size: 18px;
+            font-family: 'Source Sans Pro', sans-serif;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .points-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .points-table thead {
+            background-color: #f9fafb;
+        }
+
+        .points-table th {
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            font-family: 'Source Sans Pro', sans-serif;
+            color: #374151;
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .points-table td {
+            padding: 12px 10px;
+            font-size: 14px;
+            font-family: 'Source Sans Pro', sans-serif;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .points-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .points-value {
+            font-weight: 600;
+            color: #111827;
+            width: 90px;
+        }
+
+        .points-reason {
+            color: #111827;
+        }
+
+        .points-date {
+            color: #6b7280;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .table-wrapper {
+            max-height: 280px; /* scroll if long */
+            overflow-y: auto;
+        }
+    </style>
+
+    <div class="points-card">
+        <div class="points-title">🪙 Points History</div>
+
+        <div class="table-wrapper">
+            <table class="points-table">
+                <thead>
+                    <tr>
+                        <th>Points</th>
+                        <th>Reason</th>
+                        <th style="text-align:right;">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+    """
+
+    for row in points_history:
+        history_html += f"""
+        <tr>
+            <td class="points-value">+{row["points"]}</td>
+            <td class="points-reason">{row["reason"]}</td>
+            <td class="points-date">{row["date"]}</td>
+        </tr>
+        """
+
+        # 🔴 Optional event tracking
+        log_event(
+            "points_history",
+            "row_view",
+            {"reason": row["reason"], "points": row["points"]},
+        )
+
+    history_html += """
+                </tbody>
+            </table>
+        </div>
+    </div>
+    """
+
+    components.html(history_html, height=360, scrolling=False)
