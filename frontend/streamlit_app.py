@@ -1,8 +1,10 @@
 import streamlit as st
-from utils.sessions import is_authenticated
+from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
+import requests
 
-# 1. Basic Page Configuration
+API = "http://localhost:8000"
+
 st.set_page_config(
     page_title="Stomata Labs Gamification",
     page_icon="🌱",
@@ -10,25 +12,34 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# Hide sidebar completely before authentication
 if not is_authenticated():
     st.markdown("""
-    <style>
-    /* Hide entire sidebar including collapse button before auth */
-    section[data-testid="stSidebar"] {
-        display: none !important;
-    }
-    </style>
+        <style>
+        section[data-testid="stSidebar"],
+        button[kind="header"] {
+            display: none !important;
+        }
+        </style>
     """, unsafe_allow_html=True)
 
+# Initialize session state
+st.session_state.setdefault("is_authenticated", False)
+st.session_state.setdefault("user", None)
+st.session_state.setdefault("access_token", None)
 
-
-# 2. Initialize Session State (This persists across all pages)
-if "is_authenticated" not in st.session_state:
-    st.session_state.is_authenticated = False
-if "user" not in st.session_state:
-    st.session_state.user = None
-
+# -------- Sidebar -------- #
 if is_authenticated():
+    token = get_access_token()
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    plan = None
+
+    try:
+        plan_resp = requests.get(f"{API}/users/me/plan", headers=headers)
+        plan = plan_resp.json().get("plan_name")
+    except:
+        pass
+
     with st.sidebar:
         st.markdown("## 🧪 Stomata Labs")
 
@@ -52,48 +63,40 @@ if is_authenticated():
             log_event("sidebar", "profile_click")
             st.switch_page("pages/profile.py")
 
-def main():
-    # Header Section
-    st.title("🌱 Welcome to Stomata Labs")
-    st.subheader("Sugarcane & Maize Disease Detection Training")
-    
-    st.divider()
+        if plan in ("Prime", "Nexus"):
+            if st.button("🚨 Anomaly Detection"):
+                log_event("sidebar", "anomaly_click")
+                st.switch_page("pages/anomaly_detection.py")
 
-    # 3. Conditional Logic for Routing
-    if st.session_state.is_authenticated:
-        st.success(f"Welcome back, {st.session_state.user['name']}!")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Go to My Dashboard", use_container_width=True):
-                st.switch_page("pages/dashboard.py")
-        with col2:
-            if st.button("Log Out", use_container_width=True):
-                st.session_state.is_authenticated = False
-                st.session_state.user = None
-                st.rerun()
-                
-    else:
-        # User is not logged in
-        st.info("Please sign in to access your training quizzes and earn points.")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Login / Sign Up", type="primary", use_container_width=True):
-                st.switch_page("pages/auth.py")
-        with col2:
-            if st.button("Learn More", use_container_width=True):
-                st.info("This platform helps field operators identify crop diseases through daily gamified challenges.")
+        if plan == "Nexus":
+            if st.button("⚙️ Optimizer"):
+                log_event("sidebar", "optimizer_click")
+                st.switch_page("pages/optimizer.py")
 
-    st.divider()
-    
-    # 4. Progress Overview (Visual Placeholder)
-    st.markdown("### 🏆 Platform Rankings")
-    st.caption("Top operators this week")
-    st.table([
-        {"Operator": "John D.", "Location": "Guatemala", "Points": 1250},
-        {"Operator": "Maria S.", "Location": "Costa Rica", "Points": 1100}
-    ])
+# -------- Main Page -------- #
+st.title("🌱 Welcome to Stomata Labs")
+st.subheader("Unlock the Agro-Industrial Potential of the Sugar Industry with AI")
 
-if __name__ == "__main__":
-    main()
+if st.session_state.is_authenticated:
+    st.success(f"Welcome back, {st.session_state.user['name']}!")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Go to My Dashboard", use_container_width=True):
+            st.switch_page("pages/dashboard.py")
+
+    with col2:
+        if st.button("Log Out", use_container_width=True):
+            st.session_state.is_authenticated = False
+            st.session_state.user = None
+            st.session_state.access_token = None
+            st.rerun()
+
+else:
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Login / Sign Up", type="primary", use_container_width=True):
+            st.switch_page("pages/auth.py")
+    with col2:
+        if st.button("Learn More", use_container_width=True):
+            st.markdown("This platform helps sugar mill teams improve performance through AI-driven training.")

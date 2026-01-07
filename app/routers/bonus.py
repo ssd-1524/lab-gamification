@@ -28,8 +28,13 @@ def reward_bonus(
         raise HTTPException(status_code=400, detail="Points must be positive")
 
     # Resolve plan_id
-    loc_id = db.query(Users.loc_id).filter(Users.user_id == user_id).scalar()
-    plan_id = db.query(Location.plan_id).filter(Location.loc_id == loc_id).scalar()
+    plan_id = (
+        db.query(Location.plan_id)
+        .join(Users, Users.loc_id == Location.loc_id)
+        .filter(Users.user_id == user_id)
+        .scalar()
+    )
+
 
     # Update wallet
     wallet = db.query(PointWallet).filter(PointWallet.user_id == user_id).first()

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
 from app.background.badge_worker import run_badge_worker
 from app.background.tier_badge_worker import run_tier_badge_worker
+from app.services.stream_workers import start_stream_workers
 
 # Importing from your specific router files
 from app.routers import (
@@ -18,7 +20,10 @@ from app.routers import (
     roles,     # For fetching role strings
     location,
     bonus,
-    profile   # For fetching location strings
+    profile ,
+    anomaly_stream,
+    optimizer_stream,
+    # For fetching location strings
 )
 from app.config import get_settings
 
@@ -57,6 +62,8 @@ app.include_router(badges.router)
 app.include_router(questions.router)
 app.include_router(bonus.router)
 app.include_router(profile.router)
+app.include_router(anomaly_stream.router)
+app.include_router(optimizer_stream.router)
 # ---------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------
@@ -69,3 +76,7 @@ def health_check() -> dict:
 def start_background_workers():
     Thread(target=run_badge_worker, daemon=True).start()
     Thread(target=run_tier_badge_worker, daemon=True).start()
+
+@app.on_event("startup")
+async def start_background_streams():
+    start_stream_workers()

@@ -14,48 +14,55 @@ IST = pytz.timezone("Asia/Kolkata")
 
 router = APIRouter(prefix="/anomaly", tags=["Anomaly Stream"])
 
+# 🔒 Global in-memory anomaly state
+ACTIVE_ANOMALY_UNTIL: datetime | None = None
+
 
 @router.get("/stream")
 def anomaly_stream(
     user: dict = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Generate last 60 minutes of synthetic anomaly sensor data.
-    Available only for Prime and Nexus plans.
-    """
+    global ACTIVE_ANOMALY_UNTIL
 
     user_id = user["user_id"]
 
     plan_name = (
-        db.query(schema.Plans.plan_name)
-        .join(schema.Users, schema.Users.plan_id == schema.Plans.plan_id)
+        db.query(schema.Plan.plan_type)
+        .join(schema.Location, schema.Location.plan_id == schema.Plan.plan_id)
+        .join(schema.Users, schema.Users.loc_id == schema.Location.loc_id)
         .filter(schema.Users.user_id == user_id)
         .scalar()
     )
 
     if plan_name not in ("Prime", "Nexus"):
-        raise HTTPException(
-            status_code=403,
-            detail="Upgrade to Prime or Nexus to access Anomaly Detection",
-        )
+        raise HTTPException(403, "Upgrade to Prime or Nexus to access Anomaly Detection")
 
     now = datetime.now(IST)
-    data = []
 
+    # Start anomaly once every ~5 minutes
+    if ACTIVE_ANOMALY_UNTIL is None and random.random() < 0.10:
+        ACTIVE_ANOMALY_UNTIL = now + timedelta(minutes=2)
+
+    # Clear expired anomaly
+    if ACTIVE_ANOMALY_UNTIL and now > ACTIVE_ANOMALY_UNTIL:
+        ACTIVE_ANOMALY_UNTIL = None
+
+    data = []
     base = random.randint(40, 55)
 
     for i in range(60):
         ts = now - timedelta(minutes=59 - i)
-
         drift = random.randint(-3, 4)
-        spike = random.randint(20, 45) if random.random() < 0.07 else 0
+
+        # Anomaly only while ACTIVE
+        if i == 59 and ACTIVE_ANOMALY_UNTIL:
+            spike = random.randint(25, 45)
+        else:
+            spike = 0
 
         value = base + drift + spike
 
-        data.append({
-            "ts": ts.isoformat(),
-            "value": value,
-        })
+        data.append({"ts": ts.isoformat(), "value": value})
 
     return data
