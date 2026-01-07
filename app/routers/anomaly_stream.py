@@ -11,11 +11,10 @@ from app.routers.deps import get_authenticated_user, get_db
 from app.models import schema
 
 IST = pytz.timezone("Asia/Kolkata")
-
 router = APIRouter(prefix="/anomaly", tags=["Anomaly Stream"])
 
-# 🔒 Global in-memory anomaly state
-ACTIVE_ANOMALY_UNTIL: datetime | None = None
+# Global anomaly memory (per-process)
+LAST_ANOMALY_AT: dict[str, datetime] = {}
 
 
 @router.get("/stream")
@@ -23,11 +22,14 @@ def anomaly_stream(
     user: dict = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
 ):
-    global ACTIVE_ANOMALY_UNTIL
+    """
+    Generates 60-minute sliding sensor window.
+    Creates anomaly only once every 30 seconds.
+    """
 
     user_id = user["user_id"]
 
-    plan_name = (
+    plan = (
         db.query(schema.Plan.plan_type)
         .join(schema.Location, schema.Location.plan_id == schema.Plan.plan_id)
         .join(schema.Users, schema.Users.loc_id == schema.Location.loc_id)
@@ -35,34 +37,32 @@ def anomaly_stream(
         .scalar()
     )
 
-    if plan_name not in ("Prime", "Nexus"):
+    if plan not in ("Prime", "Nexus"):
         raise HTTPException(403, "Upgrade to Prime or Nexus to access Anomaly Detection")
 
     now = datetime.now(IST)
+    base = random.randint(45, 55)
 
-    # Start anomaly once every ~5 minutes
-    if ACTIVE_ANOMALY_UNTIL is None and random.random() < 0.10:
-        ACTIVE_ANOMALY_UNTIL = now + timedelta(minutes=2)
-
-    # Clear expired anomaly
-    if ACTIVE_ANOMALY_UNTIL and now > ACTIVE_ANOMALY_UNTIL:
-        ACTIVE_ANOMALY_UNTIL = None
+    last = LAST_ANOMALY_AT.get(user_id)
+    allow_spike = not last or (now - last) > timedelta(seconds=30)
 
     data = []
-    base = random.randint(40, 55)
 
     for i in range(60):
         ts = now - timedelta(minutes=59 - i)
-        drift = random.randint(-3, 4)
 
-        # Anomaly only while ACTIVE
-        if i == 59 and ACTIVE_ANOMALY_UNTIL:
-            spike = random.randint(25, 45)
-        else:
-            spike = 0
+        drift = random.randint(-3, 3)
+
+        spike = 0
+        if i == 59 and allow_spike and random.random() < 0.5:
+            spike = random.randint(35, 60)
+            LAST_ANOMALY_AT[user_id] = now
 
         value = base + drift + spike
 
-        data.append({"ts": ts.isoformat(), "value": value})
+        data.append({
+            "ts": ts.isoformat(),
+            "value": value,
+        })
 
     return data
