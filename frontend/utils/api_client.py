@@ -53,3 +53,22 @@ def get_user_points():
     except Exception as e:
         print("get_user_points:", e)
         return {"total_points": 0, "rank": None}
+
+def get_plant_state():
+    token = get_access_token()
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    response = requests.get(
+        f"{API_BASE_URL}/profile/plant-state",
+        headers=headers,
+        timeout=10
+    )
+
+    if response.status_code != 200:
+        return None
+
+    return response.json()
+

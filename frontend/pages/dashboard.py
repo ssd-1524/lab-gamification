@@ -6,6 +6,7 @@ import requests
 from utils.api_client import get_user_points
 from utils.events import log_event
 from utils.sessions import get_access_token
+from utils.api_client import get_plant_state
 from utils.ui_utils import FEATURE_GUIDES
 
 API_BASE_URL = "http://localhost:8000"
@@ -61,6 +62,35 @@ with col3:
     st.metric("Current Tier", rank_data.get("rank") or "—")
     if rank_data.get("badge_image"):
         st.image(rank_data["badge_image"], width=48)
+
+st.divider()
+
+# ---------------- Plant Growth Gamification ---------------- #
+st.subheader("🌱 Your Growth Journey")
+
+plant_state = get_plant_state()
+
+if plant_state:
+    col_img, col_text = st.columns([2, 3])
+
+    with col_img:
+        st.image(
+        plant_state["image_url"],
+        width=300
+)
+
+
+    with col_text:
+        st.markdown(f"### {plant_state['message']}")
+        st.caption(f"🔥 Login Streak: {plant_state['streak']} days")
+
+        if plant_state["can_replant"]:
+            if st.button("🌱 Plant seed again", type="secondary"):
+                log_event("plant", "replant_clicked")
+                st.success("A new seed has been planted 🌱 Come back tomorrow!")
+                st.rerun()
+else:
+    st.info("🌱 Your plant will appear once you start your journey!")
 
 st.divider()
 
