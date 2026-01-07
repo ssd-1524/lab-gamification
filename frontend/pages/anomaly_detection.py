@@ -25,7 +25,8 @@ if not is_authenticated():
 # ========== Auto-refresh (10s) ==========
 # Change interval_ms if you want faster/slower refresh.
 REFRESH_INTERVAL_MS = 10_000
-st_autorefresh(interval=REFRESH_INTERVAL_MS, key="anomaly_autorefresh")
+if not st.session_state.get("anomaly_active"):
+    st_autorefresh(interval=REFRESH_INTERVAL_MS, key="anomaly_autorefresh")
 
 # ========== Session state (safe defaults) ==========
 st.session_state.setdefault("anomaly_page_view_logged", False)
@@ -183,7 +184,26 @@ if st.session_state.anomaly_active:
 
             # log resolved
             try:
-                log_event("anomaly", "resolved", {"severity": severity, "response_time_sec": response_time})
+                if token:
+                    try:
+                        requests.post(
+                            f"{API_BASE}/events/",
+                            headers=headers,
+                            json={
+                                "feature": "anomaly",
+                                "action": "accepted",
+                                "metadata": {
+                                    "severity": severity,
+                                    "response_time_sec": response_time,
+                                },
+                            },
+                            timeout=3,
+                        )
+                    except Exception as e:
+                        st.error("Failed to log anomaly acceptance.")
+                        st.write(e)
+
+
             except Exception:
                 pass
 

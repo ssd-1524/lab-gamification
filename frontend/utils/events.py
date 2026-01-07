@@ -16,7 +16,7 @@ def _post_event(token: str, payload: Dict[str, Any]) -> None:
     """
     try:
         requests.post(
-            f"{API_BASE_URL}/events",
+            f"{API_BASE_URL}/events/",
             json=payload,
             headers={"Authorization": f"Bearer {token}"},
             timeout=3,

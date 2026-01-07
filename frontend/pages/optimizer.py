@@ -149,8 +149,7 @@ if st.session_state.opt_suggestion_active and st.session_state.opt_suggestion_pa
     st.divider()
     st.subheader("🔧 Optimization Suggestion")
     st.write(
-        f"Severity: **{severity}** — Estimated efficiency gain: **{est_gain}%**.\n\n"
-        f"Accepting this suggestion will award **{points} points**."
+        f"Estimated efficiency gain: **{est_gain}%**.\n\n"
     )
 
     event_key = st.session_state.opt_suggestion_key or int(datetime.now(IST).timestamp())
@@ -211,14 +210,14 @@ if st.session_state.opt_suggestion_active and st.session_state.opt_suggestion_pa
 
             st.info("Suggestion ignored.")
 
-# === Optional debug expander ===
-with st.expander("Optimizer debug", expanded=False):
-    st.write("Last fetch OK:", st.session_state.last_fetch_ok)
-    st.write("Last fetch time:", st.session_state.last_fetch_time)
-    if fetch_error:
-        st.write("Fetch error:", fetch_error)
-    st.json({
-        "cached_points": len(cache["eff"]),
-        "suggestion_active": st.session_state.opt_suggestion_active,
-        "suggestion_payload": st.session_state.opt_suggestion_payload,
-    })
+# # === Optional debug expander ===
+# with st.expander("Optimizer debug", expanded=False):
+#     st.write("Last fetch OK:", st.session_state.last_fetch_ok)
+#     st.write("Last fetch time:", st.session_state.last_fetch_time)
+#     if fetch_error:
+#         st.write("Fetch error:", fetch_error)
+#     st.json({
+#         "cached_points": len(cache["eff"]),
+#         "suggestion_active": st.session_state.opt_suggestion_active,
+#         "suggestion_payload": st.session_state.opt_suggestion_payload,
+#     })
