@@ -5,7 +5,7 @@ import requests
 from utils.api_client import get_user_points
 from utils.events import log_event
 from utils.sessions import get_access_token
-from utils.ui_utils import FEATURE_GUIDES, inject_apple_styles
+from utils.ui_utils import FEATURE_GUIDES
 
 
 
@@ -13,7 +13,6 @@ API_BASE_URL = "http://localhost:8000"
 
 # 1. Page Configuration
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
-inject_apple_styles()
 
 
 # 2. Security Check
