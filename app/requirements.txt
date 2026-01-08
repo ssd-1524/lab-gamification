@@ -13,3 +13,4 @@ python-jose[cryptography]
 getenv
 python-dotenv
 alembic
+pydantic[email]
