@@ -1,11 +1,12 @@
 import time
-from app.database import SessionLocal
+from app.database import get_session_local
 from app.services.badge_service import BadgeService
 from sqlalchemy import text
 
 
 SLEEP_SECONDS = 30
 
+SessionLocal = get_session_local()
 
 def run_badge_worker():
     """

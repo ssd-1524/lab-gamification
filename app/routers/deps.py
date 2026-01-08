@@ -7,11 +7,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
 from sqlalchemy.orm import Session
 from uuid import UUID
-from app.database import SessionLocal
+from app.database import get_session_local
 from app.models.schema import Users as User, Sessions as UserSession, Location
 
 security = HTTPBearer(auto_error=True)
 
+SessionLocal = get_session_local()
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
