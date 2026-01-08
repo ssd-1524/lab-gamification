@@ -8,3 +8,4 @@ psycopg[binary]==3.2.13
 pydantic-settings
 httpx<0.28
 gotrue<2.0
+pytz

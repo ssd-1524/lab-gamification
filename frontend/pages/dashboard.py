@@ -9,7 +9,7 @@ from utils.sessions import get_access_token
 from utils.api_client import get_plant_state
 from utils.ui_utils import FEATURE_GUIDES
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "https://lab-gamification.onrender.com"
 
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
 

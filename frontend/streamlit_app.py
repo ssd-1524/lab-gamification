@@ -3,7 +3,7 @@ from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
 import requests
 
-API = "http://localhost:8000"
+API = "https://lab-gamification.onrender.com"
 
 st.set_page_config(
     page_title="Stomata Labs Gamification",
