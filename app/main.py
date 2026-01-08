@@ -86,6 +86,10 @@ app.include_router(optimizer_stream.router)
 # ---------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------
+@app.get("/")
+def root():
+    return {"status": "running"}
+
 @app.get("/health", tags=["System"])
 def health_check() -> dict:
     """Simple health check endpoint."""
