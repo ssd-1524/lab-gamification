@@ -13,7 +13,7 @@ from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
 
 IST = pytz.timezone("Asia/Kolkata")
-API_BASE = "http://localhost:8000"
+API_BASE = "https://lab-gamification.onrender.com"
 
 # ========== Page config ==========
 st.set_page_config(page_title="Anomaly Detection", layout="wide")

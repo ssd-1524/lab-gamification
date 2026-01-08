@@ -55,7 +55,7 @@ app = FastAPI(
 # Allow both localhost hostnames used by Streamlit; change to ["*"] for dev if needed.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],
+    allow_origins=["https://stomatalabs.streamlit.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

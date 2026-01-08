@@ -16,7 +16,7 @@ if not is_authenticated():
 # 🔴 PAGE VIEW EVENT
 log_event("profile", "page_view")
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "https://lab-gamification.onrender.com"
 
 # ------------------ Fetch Profile Data ------------------ #
 

@@ -3,7 +3,7 @@ import requests
 from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "https://lab-gamification.onrender.com"
 
 if not is_authenticated():
     st.switch_page("pages/auth.py")

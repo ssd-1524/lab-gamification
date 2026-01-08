@@ -9,7 +9,7 @@ import streamlit as st
 from utils.sessions import get_access_token, is_authenticated
 from utils.events import log_event
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "https://lab-gamification.onrender.com"
 
 # ------------------ Guards ------------------ #
 

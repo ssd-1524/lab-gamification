@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 import requests
 import streamlit as st
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "https://lab-gamification.onrender.com"
 
 
 def _post_event(token: str, payload: Dict[str, Any]) -> None:

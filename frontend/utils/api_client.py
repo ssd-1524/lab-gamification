@@ -4,7 +4,7 @@ from utils.config_loader import load_config
 
 config = load_config()
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "https://lab-gamification.onrender.com"
 SUPABASE_URL = config["SUPABASE_URL"]
 SUPABASE_ANON_KEY = config["SUPABASE_ANON_KEY"]
 
