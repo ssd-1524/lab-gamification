@@ -1,8 +1,12 @@
 import requests
 from utils.sessions import get_access_token
+from utils.config_loader import load_config
+
+config = load_config()
 
 API_BASE_URL = "http://localhost:8000"
-
+SUPABASE_URL = config["SUPABASE_URL"]
+SUPABASE_ANON_KEY = config["SUPABASE_ANON_KEY"]
 
 def get_roles():
     try:
