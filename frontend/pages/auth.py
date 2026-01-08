@@ -1,8 +1,7 @@
 import streamlit as st
 from utils.api_client import get_roles, get_locations, signup_user, login_user
 from utils.sessions import set_authenticated, is_authenticated
-
-from utils.events import log_event  # 🔴 ADDED
+from utils.events import log_event
 
 st.set_page_config(page_title="Auth - Stomata Labs", page_icon="🔐")
 
@@ -42,10 +41,10 @@ with tab_login:
         submit_login = st.form_submit_button("Login", use_container_width=True)
 
         if submit_login:
-            log_event("auth", "login_click")  # 🔴 ADDED
+            log_event("auth", "login_click")
 
             if not email or not password:
-                log_event("auth", "login_failed", {"reason": "missing_fields"})  # 🔴 ADDED
+                log_event("auth", "login_failed", {"reason": "missing_fields"})
                 st.error("Please fill in all fields.")
             else:
                 login_payload = {"email": email, "password": password}
@@ -58,47 +57,44 @@ with tab_login:
 
                 if isinstance(res, dict) and "access_token" in res:
                     set_authenticated(token=res["access_token"], user=res["user"])
-                    log_event("auth", "login_success")  # 🔴 ADDED
+                    log_event("auth", "login_success")
 
                     st.session_state.show_login_popup = True
-                    st.success(f"Welcome back, {res['user']['name']}!")
-                    st.switch_page("pages/dashboard.py")
+                    st.success(f"Welcome back, {res['user'].get('name', 'User')}!")
+                    st.experimental_rerun()
                 else:
-                    log_event(
-                        "auth",
-                        "login_failed",
-                        {"reason": res.get("detail", "unknown") if isinstance(res, dict) else str(res)},
-                    )  # 🔴 ADDED
+                    reason = res.get("detail", "unknown") if isinstance(res, dict) else str(res)
+                    log_event("auth", "login_failed", {"reason": reason})
                     st.error(res.get("detail", "Login failed. Check your credentials.") if isinstance(res, dict) else "Login failed. Check your credentials.")
 
 # --- SIGNUP SECTION ---
 with tab_signup:
+    # Load button must be OUTSIDE the st.form to avoid StreamlitAPIException
+    if not st.session_state.roles_loaded or not st.session_state.locations_loaded:
+        if st.button("Load roles & locations"):
+            log_event("auth", "load_roles_clicked")
+            with st.spinner("Loading roles and locations..."):
+                try:
+                    roles = get_roles() or []
+                    locations = get_locations() or []
+
+                    st.session_state.roles_data = roles
+                    st.session_state.locations_data = locations
+                    st.session_state.roles_loaded = True
+                    st.session_state.locations_loaded = True
+
+                    log_event("auth", "load_roles_success")
+                except Exception as e:
+                    log_event("auth", "load_roles_failed", {"error": str(e)})
+                    st.error("Failed to load roles or locations. Please try again in a moment.")
+
     with st.form("signup_form"):
         st.subheader("Register New Account")
         name = st.text_input("Full Name")
         new_email = st.text_input("Email")
         new_password = st.text_input("Password", type="password")
 
-        # Lazy-load roles & locations only when user requests
-        if not st.session_state.roles_loaded or not st.session_state.locations_loaded:
-            if st.button("Load roles & locations"):
-                log_event("auth", "load_roles_clicked")
-                with st.spinner("Loading roles and locations..."):
-                    try:
-                        roles = get_roles() or []
-                        locations = get_locations() or []
-
-                        st.session_state.roles_data = roles
-                        st.session_state.locations_data = locations
-                        st.session_state.roles_loaded = True
-                        st.session_state.locations_loaded = True
-
-                        log_event("auth", "load_roles_success")
-                    except Exception as e:
-                        log_event("auth", "load_roles_failed", {"error": str(e)})
-                        st.error("Failed to load roles or locations. Please try again in a moment.")
-
-        # Display selectboxes (disabled if not loaded)
+        # Role selectbox (uses loaded session state)
         def _role_format(x):
             return x.get("role_name") if x else "No roles available"
 
@@ -134,10 +130,10 @@ with tab_signup:
         submit_signup = st.form_submit_button("Sign Up", use_container_width=True)
 
         if submit_signup:
-            log_event("auth", "signup_click")  # 🔴 ADDED
+            log_event("auth", "signup_click")
 
             if not all([name, new_email, new_password, selected_role, selected_location]):
-                log_event("auth", "signup_failed", {"reason": "missing_fields"})  # 🔴 ADDED
+                log_event("auth", "signup_failed", {"reason": "missing_fields"})
                 st.error("Please fill in all fields.")
             else:
                 # selected_role and selected_location are dicts returned from the API
@@ -156,12 +152,9 @@ with tab_signup:
                     st.stop()
 
                 if isinstance(res, dict) and res.get("status") == "success":
-                    log_event("auth", "signup_success")  # 🔴 ADDED
+                    log_event("auth", "signup_success")
                     st.success("Account created! You can now log in.")
                 else:
-                    log_event(
-                        "auth",
-                        "signup_failed",
-                        {"reason": res.get("detail", "unknown") if isinstance(res, dict) else str(res)},
-                    )  # 🔴 ADDED
+                    reason = res.get("detail", "unknown") if isinstance(res, dict) else str(res)
+                    log_event("auth", "signup_failed", {"reason": reason})
                     st.error(f"Signup failed: {res.get('detail') if isinstance(res, dict) else str(res)}")
