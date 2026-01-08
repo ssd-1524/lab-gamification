@@ -86,8 +86,9 @@ app.include_router(optimizer_stream.router)
 # ---------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
+    # For HEAD, FastAPI/Starlette will send the same headers but no body.
     return {"status": "running"}
 
 @app.get("/health", tags=["System"])
