@@ -10,7 +10,7 @@ SUPABASE_ANON_KEY = config["SUPABASE_ANON_KEY"]
 
 def get_roles():
     try:
-        r = requests.get(f"{API_BASE_URL}/roles/", timeout=5)
+        r = requests.get(f"{API_BASE_URL}/roles/", timeout=50)
         return r.json() if r.status_code == 200 else []
     except Exception as e:
         print("get_roles:", e)
@@ -19,7 +19,7 @@ def get_roles():
 
 def get_locations():
     try:
-        r = requests.get(f"{API_BASE_URL}/locations/", timeout=5)
+        r = requests.get(f"{API_BASE_URL}/locations/", timeout=50)
         return r.json() if r.status_code == 200 else []
     except Exception as e:
         print("get_locations:", e)
@@ -28,7 +28,7 @@ def get_locations():
 
 def signup_user(payload: dict):
     try:
-        r = requests.post(f"{API_BASE_URL}/auth/signup", json=payload, timeout=10)
+        r = requests.post(f"{API_BASE_URL}/auth/signup", json=payload, timeout=50)
         return r.json()
     except Exception as e:
         return {"status": "error", "detail": str(e)}
@@ -36,7 +36,7 @@ def signup_user(payload: dict):
 
 def login_user(payload: dict):
     try:
-        r = requests.post(f"{API_BASE_URL}/auth/login", json=payload, timeout=10)
+        r = requests.post(f"{API_BASE_URL}/auth/login", json=payload, timeout=50)
         return r.json()
     except Exception as e:
         return {"status": "error", "detail": str(e)}
@@ -51,7 +51,7 @@ def get_user_points():
         r = requests.get(
             f"{API_BASE_URL}/auth/points",
             headers={"Authorization": f"Bearer {token}"},
-            timeout=5,
+            timeout=50,
         )
         return r.json() if r.status_code == 200 else {"total_points": 0, "rank": None}
     except Exception as e:
@@ -68,7 +68,7 @@ def get_plant_state():
     response = requests.get(
         f"{API_BASE_URL}/profile/plant-state",
         headers=headers,
-        timeout=10
+        timeout=50
     )
 
     if response.status_code != 200:
