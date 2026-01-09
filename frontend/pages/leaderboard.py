@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 import streamlit as st
 import requests
+
 from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
 from utils.theme import apply_theme
 
 API_BASE_URL = "https://lab-gamification.onrender.com"
+
+st.set_page_config(page_title="Leaderboard - Stomata Labs", layout="wide")
 apply_theme()
 
+# ---------------- Security ---------------- #
 if not is_authenticated():
     st.switch_page("pages/auth.py")
 
@@ -15,50 +21,82 @@ log_event("leaderboard", "page_view")
 headers = {"Authorization": f"Bearer {get_access_token()}"}
 resp = requests.get(f"{API_BASE_URL}/users/leaderboard", headers=headers)
 
+# ---------------- Styles ---------------- #
 st.markdown("""
 <style>
-.lb-table {
-    border-radius: 16px;
+.leaderboard-card {
+    border: 5px solid rgba(0,0,0,0.08);
+    border-radius: 18px;
     overflow: hidden;
-    background: var(--secondary-background-color);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    background: #ffffff;
 }
-.lb-row {
-    display: grid;
-    grid-template-columns: 60px 1fr 120px 120px;
-    padding: 12px 16px;
-    align-items: center;
+
+.lb-table {
+    width: 100%;
+    border-collapse: collapse;
 }
-.lb-row:not(:last-child) {
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.lb-me {
-    background: linear-gradient(90deg, rgba(255,75,75,0.15), transparent);
-}
-.lb-head {
+
+.lb-table th {
+    text-align: left;
+    font-size: 13px;
     font-weight: 700;
-    opacity: 0.85;
+    padding: 14px 18px;
+    background: #f8fafc;
+    color: #475569;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.lb-table td {
+    padding: 14px 18px;
+    font-size: 14px;
+    color: #0f172a;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.lb-me {
+    background: rgba(0,0,0,0.04);
+    font-weight: 700;
+}
+
+.lb-badge img {
+    vertical-align: middle;
 }
 </style>
-<div class="lb-table">
-  <div class="lb-row lb-head">
-    <div>🏅</div><div>Name</div><div>Points</div><div>Rank</div>
-  </div>
+
+<div class="leaderboard-card">
+<table class="lb-table">
+<thead>
+<tr>
+  <th>Badge</th>
+  <th>Name</th>
+  <th>Points</th>
+  <th>Rank</th>
+</tr>
+</thead>
+<tbody>
 """, unsafe_allow_html=True)
 
+# ---------------- Table Rows ---------------- #
 for row in resp.json():
-    me_class = "lb-row lb-me" if row["is_me"] else "lb-row"
+    row_class = "lb-me" if row["is_me"] else ""
 
     st.markdown(
         f"""
-        <div class="{me_class}">
-            <div>{f"<img src='{row['badge_image']}' width='34'>" if row["badge_image"] else "—"}</div>
-            <div>{row['name']}</div>
-            <div>{row['points']} pts</div>
-            <div>{row['rank'] or "—"}</div>
-        </div>
+        <tr class="{row_class}">
+            <td class="lb-badge">
+                {f"<img src='{row['badge_image']}' width='34'>" if row["badge_image"] else "—"}
+            </td>
+            <td>{row['name']}</td>
+            <td>{row['points']} pts</td>
+            <td>{row['rank'] or "—"}</td>
+        </tr>
         """,
         unsafe_allow_html=True,
     )
 
-st.markdown("</div>", unsafe_allow_html=True)
+# ---------------- Close Table ---------------- #
+st.markdown("""
+</tbody>
+</table>
+</div>
+""", unsafe_allow_html=True)
