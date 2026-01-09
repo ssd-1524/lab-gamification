@@ -146,53 +146,39 @@ components.html(f"""
 # ---------------- Plant Growth ---------------- #
 st.markdown("""
 <style>
-.plant-card {
-    border: 5px solid rgba(0,0,0,0.08);
-    border-radius: 14px;
-    padding: 14px 18px;
-    background: #ffffff;
-    margin-bottom: 22px;
-}
-
-.plant-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 2px;
-}
-
-.plant-sub {
-    font-size: 14px;
-    font-weight: 600;
-    color: #334155;
+[data-testid="stVerticalBlock"]:has(> div > img) {
+    border: 5px solid rgba(0,0,0,0.08) !important;
+    border-radius: 14px !important;
+    padding: 16px 20px !important;
+    background: #ffffff !important;
+    margin-bottom: 24px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("## 🌱 Your Growth Journey")
+
 plant_state = get_plant_state()
 
 if plant_state:
-    left, right = st.columns([1, 2.2])
+    col_img, col_text = st.columns([1, 2.2])
 
-    with left:
-        st.image(plant_state["image_url"], width=200)
+    with col_img:
+        st.image(plant_state["image_url"], width=220)
 
-    with right:
-        st.markdown('<div class="plant-card">', unsafe_allow_html=True)
-        st.markdown(f'<div class="plant-title">{plant_state["message"]}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="plant-sub">🔥 Login Streak: {plant_state["streak"]} days</div>', unsafe_allow_html=True)
+    with col_text:
+        st.markdown(f"### {plant_state['message']}")
+        st.markdown(f"🔥 **Login Streak:** {plant_state['streak']} days")
 
         if plant_state.get("can_replant"):
-            if st.button("🌱 Plant seed again", key="replant"):
+            if st.button("🌱 Plant seed again"):
                 log_event("plant", "replanted")
                 st.session_state["_force_plant_refresh"] = datetime.now(IST).isoformat()
                 st.success("A new seed has been planted 🌱 Come back tomorrow!")
                 st.rerun()
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
 else:
     st.info("🌱 Your plant will appear once you start your journey!")
+
 
 
 # ---------------- Guides ---------------- #
