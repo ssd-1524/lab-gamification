@@ -4,6 +4,7 @@ import time
 import requests
 from datetime import datetime
 from pytz import timezone
+from textwrap import dedent
 
 from utils.api_client import get_user_points
 from utils.events import log_event
@@ -63,39 +64,158 @@ with st.container(border=True):
 st.divider()
 
 
-# ---------------- Metrics ---------------- #
+st.markdown(
+    dedent(
+        """
+    <style>
+    /* baseline card */
+    .metric-card {
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 6px 18px rgba(12,14,20,0.04);
+        border: 1px solid rgba(15,23,42,0.06);
+        background: #ffffff;
+        height:100%;
+        box-sizing:border-box;
+    }
 
-with st.container(border=True):
-    col1, col2, col3 = st.columns(3)
+    /* black & white card for points */
+    .bw-card {
+        background: #0b0b0b !important;
+        color: #ffffff !important;
+    }
+    .bw-card .muted {
+        color: rgba(255,255,255,0.75) !important;
+        font-weight: 600;
+        font-size: 13px;
+        letter-spacing: 0.6px;
+    }
+    .bw-card .big-value {
+        font-size: 40px;
+        font-weight: 800;
+        line-height: 1;
+        color: #ffffff;
+    }
+    .bw-card .small-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: #ffffff;
+    }
 
-    # -------- Total Points --------
-    with col1:
-        st.markdown("### 🪙 Total Points")
-        st.markdown(f"## **{rank_data.get('points', 0)} pts**")
+    /* tier card specifics */
+    .tier-card .title {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+    }
+    .tier-card .tier-name {
+        font-size: 20px;
+        color: #0f172a;
+        font-weight: 800;
+        margin-top: 6px;
+    }
+    .tier-card .tier-body {
+        display:flex;
+        gap:12px;
+        align-items:center;
+        margin-top:12px;
+    }
+    .tier-card img.badge {
+        height:56px;
+        width:auto;
+        border-radius:8px;
+        object-fit:contain;
+    }
+
+    /* ensure equal heights */
+    .card-outer { height: 100%; }
+
+    @media (max-width: 640px) {
+        /* stack on small screens */
+        .card-row { flex-direction: column !important; gap: 12px !important; }
+    }
+    </style>
+    """
+    ),
+    unsafe_allow_html=True,
+)
+
+# columns: left is wider (points+rank), right is for tier card
+col_left, col_right = st.columns([2, 1], gap="large")
+
+# -------- LEFT: Points + Rank (B&W styled card) --------
+with col_left:
+    total_points = int(rank_data.get("points", 0) or 0)
+    position = rank_data.get("position") or "—"
+
+    points_html = dedent(
+        f"""
+    <div class="metric-card bw-card card-outer" role="region" aria-label="points-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div class="muted">POINTS</div>
+          <div class="big-value">{total_points:,}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="muted">RANK</div>
+          <div class="small-value">{position}</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="flex:1;color:rgba(255,255,255,0.88);font-size:13px;">
+          Keep your streak — complete daily training to earn more points.
+        </div>
+        <div>
+          <!-- Visual CTA (non-interactive) — keep interactions via Streamlit buttons if required -->
+          <div style="display:inline-block;padding:8px 14px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:white;font-weight:700;">
+            View Wallet
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+    )
+    st.markdown(points_html, unsafe_allow_html=True)
+    # record wallet view impression
+    try:
         log_event("wallet", "view")
+    except Exception:
+        pass
 
-    # -------- Rank --------
-    with col2:
-        pos = rank_data.get("position")
-        st.markdown("### 🏆 Rank")
-        st.markdown(f"## **{pos}**" if pos else "## —")
+# -------- RIGHT: Tier + Badge (white card) --------
+with col_right:
+    tier_name = rank_data.get("rank") or "—"
+    badge_image = rank_data.get("badge_image")  # may be None
 
-    # -------- Tier + Badge (Side by Side) --------
-    with col3:
-        st.markdown("### 🎖️ Current Tier")
+    tier_html = dedent(
+        f"""
+    <div class="metric-card tier-card card-outer" role="region" aria-label="tier-card">
+      <div class="title">CURRENT TIER</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="flex:1;">
+          <div class="tier-name">{tier_name}</div>
+          <div style="font-size:13px;color:#475569;margin-top:8px;font-weight:600;">Membership</div>
+        </div>
+      </div>
+      <div class="tier-body">
+    """
+    )
 
-        badge_col, tier_col = st.columns([1, 4], gap="small")
+    if badge_image:
+        # include badge image inside the card
+        tier_html += dedent(f"""<img class="badge" src="{badge_image}" alt="badge" />""")
+    else:
+        tier_html += dedent(
+            """<div style="width:56px;height:56px;border-radius:8px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;">
+                 <div style="font-weight:700;color:#9ca3af;">—</div>
+               </div>"""
+        )
 
-        with badge_col:
-            if rank_data.get("badge_image"):
-                st.image(
-                    rank_data["badge_image"],
-                    width=56
-                )
+    tier_html += "</div></div>"
 
-        with tier_col:
-            st.markdown(f"## **{rank_data.get('rank') or '—'}**")
-
+    st.markdown(tier_html, unsafe_allow_html=True)
 
 st.divider()
 
