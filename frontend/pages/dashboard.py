@@ -16,66 +16,6 @@ API_BASE_URL = "https://lab-gamification.onrender.com"
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
 IST = timezone("Asia/Kolkata")
 
-st.markdown("""
-<style>
-
-/* Sidebar background */
-section[data-testid="stSidebar"] {
-    background-color: rgba(255, 75, 75, 0.88);
-    box-shadow: inset -1px 0 0 rgba(255,255,255,0.15);
-}
-
-
-/* All sidebar text */
-section[data-testid="stSidebar"] * {
-    color: white !important;
-    font-weight: 600;
-    letter-spacing: .3px;
-}
-
-/* Sidebar nav links */
-section[data-testid="stSidebar"] a {
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin: 4px 6px;
-    display: block;
-}
-
-/* Active page */
-section[data-testid="stSidebar"] a[aria-selected="true"] {
-    background: rgba(255,255,255,0.25) !important;
-}
-
-/* Hover state */
-section[data-testid="stSidebar"] a:hover {
-    background: rgba(255,255,255,0.15);
-}
-
-/* Hide Streamlit footer */
-footer { visibility: hidden; }
-
-</style>
-<script>
-const capitalize = txt =>
-  txt.replace(/\\b\\w/g, l => l.toUpperCase());
-
-function fixSidebarLabels() {
-  const links = window.parent.document.querySelectorAll(
-    'section[data-testid="stSidebar"] a span'
-  );
-  links.forEach(el => {
-    const clean = capitalize(el.innerText.replaceAll("_", " "));
-    el.innerText = clean;
-  });
-}
-
-const observer = new MutationObserver(() => fixSidebarLabels());
-observer.observe(window.parent.document.body, { childList: true, subtree: true });
-
-setTimeout(fixSidebarLabels, 300);
-</script>
-""", unsafe_allow_html=True)
-
 
 # ---------------- Security ---------------- #
 if not st.session_state.get("is_authenticated"):
