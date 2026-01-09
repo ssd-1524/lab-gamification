@@ -43,6 +43,17 @@ def apply_theme() -> None:
             background-color: #3a3a3a !important;
             color: #d1d1d1 !important;
         }
+        /* -------- GLOBAL CARD BORDER STYLE -------- */
+        [data-testid="stContainer"] > div {
+            border: 5px solid rgba(0,0,0,0.08) !important;
+            border-radius: 18px !important;
+            padding: 18px !important;
+        }
+
+        /* -------- EXCLUDE BLACK & WHITE CARDS -------- */
+        .bw-card {
+            border: none !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,

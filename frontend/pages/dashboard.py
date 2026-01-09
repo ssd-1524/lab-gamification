@@ -145,24 +145,41 @@ components.html(f"""
 
 # ---------------- Plant Growth ---------------- #
 with st.container(border=True):
-    st.markdown("## 🌱 Your Growth Journey")
 
     plant_state = get_plant_state()
     if plant_state:
-        col_img, col_text = st.columns([2, 3])
+
+        st.markdown("""
+        <div style="
+            font-size:13px;
+            font-weight:700;
+            color:#64748b;
+            letter-spacing:.04em;
+            margin-bottom:12px;">
+            YOUR GROWTH JOURNEY
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_img, col_text = st.columns([1.4, 3])
+
         with col_img:
-            st.image(plant_state["image_url"], width=280)
+            st.image(plant_state["image_url"], width=240)
+
         with col_text:
-            st.markdown(f"### {plant_state['message']}")
-            st.markdown(f"#### 🔥 Login Streak: **{plant_state['streak']} days**")
+            st.markdown(f"""
+            <div style="font-size:20px;font-weight:700;color:#0f172a;">
+                {plant_state['message']}
+            </div>
+            <div style="margin-top:6px;font-size:14px;font-weight:600;color:#475569;">
+                🔥 Login Streak: <span style="font-weight:800;color:#0f172a;">{plant_state['streak']} days</span>
+            </div>
+            """, unsafe_allow_html=True)
 
             if plant_state.get("can_replant"):
                 if st.button("🌱 Plant seed again"):
                     log_event("plant", "replanted")
                     st.success("A new seed has been planted 🌱 Come back tomorrow!")
                     st.rerun()
-
-st.divider()
 
 # ---------------- Guides ---------------- #
 st.subheader("📖 Feature Guides")
