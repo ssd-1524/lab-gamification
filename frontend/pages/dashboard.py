@@ -21,8 +21,10 @@ st.markdown("""
 
 /* Sidebar background */
 section[data-testid="stSidebar"] {
-    background-color: #FF4B4B;
+    background-color: rgba(255, 75, 75, 0.88);
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.15);
 }
+
 
 /* All sidebar text */
 section[data-testid="stSidebar"] * {
