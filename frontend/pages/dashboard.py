@@ -64,25 +64,26 @@ with st.container(border=True):
 st.divider()
 
 
+# ---------------- Metrics ---------------- #
+
 st.markdown("""
 <style>
-.card-row {
+.metric-row {
     display:flex;
     gap:20px;
-    align-items:stretch;
     width:100%;
 }
 
 .metric-card {
     flex:1;
-    border-radius:16px;
     padding:22px;
+    border-radius:18px;
     border:1px solid rgba(0,0,0,0.06);
     background:#ffffff;
 }
 
 .bw-card {
-    background:#0a0a0a;
+    background:#0b0b0b;
     color:white;
 }
 
@@ -95,20 +96,19 @@ st.markdown("""
 .bw-card .points {
     font-size:42px;
     font-weight:800;
-    margin-top:4px;
 }
 
 .bw-card .rank {
     text-align:right;
 }
 
-.bw-card .wallet-btn {
-    margin-top:18px;
+.wallet-btn {
+    margin-top:16px;
     padding:8px 16px;
     border:1px solid rgba(255,255,255,0.25);
     border-radius:10px;
-    display:inline-block;
     font-weight:700;
+    display:inline-block;
 }
 
 .tier-card .title {
@@ -129,29 +129,25 @@ st.markdown("""
     gap:14px;
     margin-top:14px;
 }
-
-.tier-body img {
-    height:56px;
-}
 </style>
 """, unsafe_allow_html=True)
 
 points = rank_data.get("points", 0)
-position = rank_data.get("position", "—")
+rank = rank_data.get("position", "—")
 tier = rank_data.get("rank", "—")
-badge = rank_data.get("badge_image")
+badge = rank_data.get("badge_image") or ""
 
-row_html = f"""
-<div class="card-row">
+st.markdown(f"""
+<div class="metric-row">
     <div class="metric-card bw-card">
         <div style="display:flex;justify-content:space-between;">
             <div>
                 <div class="label">POINTS</div>
-                <div class="points">{points:,}</div>
+                <div class="points">{points}</div>
             </div>
             <div class="rank">
                 <div class="label">RANK</div>
-                <div class="points" style="font-size:24px;">{position}</div>
+                <div class="points" style="font-size:24px;">{rank}</div>
             </div>
         </div>
 
@@ -166,14 +162,13 @@ row_html = f"""
         <div class="title">CURRENT TIER</div>
         <div class="tier">{tier}</div>
         <div class="tier-body">
-            {f"<img src='{badge}' />" if badge else ""}
+            <img src="{badge}" height="56"/>
             <div style="font-size:13px;color:#475569;font-weight:600;">Membership</div>
         </div>
     </div>
 </div>
-"""
+""", unsafe_allow_html=True)
 
-st.markdown(row_html, unsafe_allow_html=True)
 st.divider()
 
 
