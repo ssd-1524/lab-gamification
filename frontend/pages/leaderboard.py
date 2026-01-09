@@ -57,6 +57,7 @@ st.markdown("""
     background: #0b0b0b;
     color: #ffffff;
     font-weight: 800;
+    border-radius: 12px;
 }
 
 .lb-me div {
