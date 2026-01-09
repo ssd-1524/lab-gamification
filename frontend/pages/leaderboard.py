@@ -32,7 +32,6 @@ rows = resp.json()
 st.markdown("""
 <style>
 .lb-wrapper {
-    border: 5px solid rgba(0,0,0,0.08);
     border-radius: 18px;
     padding: 18px 10px;
     background: #ffffff;
