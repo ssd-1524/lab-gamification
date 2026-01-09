@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.routers.deps import get_authenticated_user, get_db
-from app.services.plant_service import get_plant_stage
+from app.services.plant_service import get_plant_state as resolve_plant_stage
 from app.services.plant_config import PLANT_STAGE_CONFIG
 
 router = APIRouter(
@@ -120,6 +120,7 @@ def get_plant_state(
 ):
     user_id = user["user_id"]
 
+    # ---------------- Get streak info ----------------
     streak_row = db.execute(
         text("""
             SELECT streak, longest_streak
@@ -132,7 +133,36 @@ def get_plant_state(
     streak = streak_row.streak if streak_row else 0
     longest_streak = streak_row.longest_streak if streak_row else 0
 
-    plant_stage = get_plant_stage(streak, longest_streak)
+    # ---------------- Get last login ----------------
+    last_login = db.execute(
+        text("""
+            SELECT MAX(login_time)
+            FROM sessions
+            WHERE user_id = :user_id
+        """),
+        {"user_id": user_id},
+    ).scalar()
+
+    # ---------------- Get last replant ----------------
+    replanted_at = db.execute(
+        text("""
+            SELECT MAX(timestamp)
+            FROM events
+            WHERE user_id = :user_id
+              AND feature = 'plant'
+              AND action = 'replanted'
+        """),
+        {"user_id": user_id},
+    ).scalar()
+
+    # ---------------- Resolve plant stage ----------------
+    plant_stage = resolve_plant_stage(
+        streak=streak,
+        longest_streak=longest_streak,
+        replanted_at=replanted_at,
+        last_login=last_login,
+    )
+
     plant_ui = PLANT_STAGE_CONFIG[plant_stage]
 
     return {

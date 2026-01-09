@@ -1,15 +1,26 @@
-# app/services/plant_service.py
+from datetime import datetime
 
-def get_plant_stage(streak: int, longest_streak: int) -> str:
+
+def get_plant_state(
+    streak: int,
+    longest_streak: int,
+    replanted_at: datetime | None,
+    last_login: datetime | None,
+) -> str:
     """
-    Decide plant stage using current and historical streaks.
+    Plant stage rules:
 
-    Logic:
-    - streak > 0  → growing plant
-    - streak = 0 & longest_streak = 0 → new user → soil
-    - streak = 0 & longest_streak > 0 → streak broken → dead
+    - If user replanted AFTER the last login → soil
+    - If streak > 0 → growing plant
+    - If streak == 0 and longest_streak == 0 → soil (new user)
+    - If streak == 0 and longest_streak > 0 → dead plant
     """
 
+    # 🌱 User explicitly replanted after streak break
+    if replanted_at and last_login and replanted_at > last_login:
+        return "soil"
+
+    # 🌿 Growing
     if streak > 0:
         if streak <= 5:
             return "small"
@@ -17,8 +28,9 @@ def get_plant_stage(streak: int, longest_streak: int) -> str:
             return "medium"
         return "large"
 
-    # streak == 0
+    # 🟤 Brand new user
     if longest_streak == 0:
         return "soil"
 
+    # ☠️ Streak broken & not replanted
     return "dead"

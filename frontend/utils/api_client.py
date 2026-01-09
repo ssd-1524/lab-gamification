@@ -1,6 +1,7 @@
 import requests
 from utils.sessions import get_access_token
 from utils.config_loader import load_config
+import streamlit as st
 
 config = load_config()
 
@@ -58,18 +59,28 @@ def get_user_points():
         print("get_user_points:", e)
         return {"total_points": 0, "rank": None}
 
+
 def get_plant_state():
     token = get_access_token()
+    if not token:
+        return None
+
+    # 🔁 Bust Streamlit request caching when plant state changes
+    refresh_token = st.session_state.get("_force_plant_refresh", "")
 
     headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {token}",
+        "X-Refresh": refresh_token,
     }
 
-    response = requests.get(
-        f"{API_BASE_URL}/profile/plant-state",
-        headers=headers,
-        timeout=50
-    )
+    try:
+        response = requests.get(
+            f"{API_BASE_URL}/profile/plant-state",
+            headers=headers,
+            timeout=10,
+        )
+    except Exception:
+        return None
 
     if response.status_code != 200:
         return None

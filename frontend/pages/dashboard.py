@@ -106,7 +106,7 @@ with st.container(border=True):
         with col_img:
             st.image(
                 plant_state["image_url"],
-                width=280
+                width=280,
             )
 
         # -------- Text Content --------
@@ -116,16 +116,21 @@ with st.container(border=True):
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            if plant_state["can_replant"]:
+            if plant_state.get("can_replant"):
                 if st.button("🌱 Plant seed again", type="secondary"):
-                    log_event("plant", "replant_clicked")
+                    # 🔥 log real replant event
+                    log_event("plant", "replanted")
+
+                    # 🔁 refresh backend-derived plant state
+                    st.session_state["_force_plant_refresh"] = datetime.now(IST).isoformat()
+
                     st.success("A new seed has been planted 🌱 Come back tomorrow!")
                     st.rerun()
-
     else:
         st.info("🌱 Your plant will appear once you start your journey!")
 
 st.divider()
+
 
 # ---------------- Guides ---------------- #
 st.subheader("📖 Feature Guides")
