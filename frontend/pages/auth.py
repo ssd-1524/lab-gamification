@@ -5,6 +5,24 @@ from utils.events import log_event
 
 st.set_page_config(page_title="Auth - Stomata Labs", page_icon="🔐")
 
+# -------- Auto-load roles & locations once --------
+if not st.session_state.get("roles_loaded"):
+    try:
+        st.session_state.roles_data = get_roles() or []
+        st.session_state.roles_loaded = True
+    except Exception:
+        st.session_state.roles_data = []
+        st.session_state.roles_loaded = False
+
+if not st.session_state.get("locations_loaded"):
+    try:
+        st.session_state.locations_data = get_locations() or []
+        st.session_state.locations_loaded = True
+    except Exception:
+        st.session_state.locations_data = []
+        st.session_state.locations_loaded = False
+
+
 # 🔐 HIDE SIDEBAR IF NOT AUTHENTICATED
 if not is_authenticated():
     st.markdown(
@@ -72,24 +90,6 @@ with tab_login:
 
 # --- SIGNUP SECTION ---
 with tab_signup:
-    # Load button must be OUTSIDE the st.form to avoid StreamlitAPIException
-    if not st.session_state.roles_loaded or not st.session_state.locations_loaded:
-        if st.button("Load roles & locations"):
-            log_event("auth", "load_roles_clicked")
-            with st.spinner("Loading roles and locations..."):
-                try:
-                    roles = get_roles() or []
-                    locations = get_locations() or []
-
-                    st.session_state.roles_data = roles
-                    st.session_state.locations_data = locations
-                    st.session_state.roles_loaded = True
-                    st.session_state.locations_loaded = True
-
-                    log_event("auth", "load_roles_success")
-                except Exception as e:
-                    log_event("auth", "load_roles_failed", {"error": str(e)})
-                    st.error("Failed to load roles or locations. Please try again in a moment.")
 
     with st.form("signup_form"):
         st.subheader("Register New Account")
