@@ -46,23 +46,20 @@ st.markdown(f"### **{user['name']}**")
 components.html(f"""
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap">
 <style>
-* {{
-  font-family: 'Source Sans Pro' !important;
-}}
-
 .info-row {{
   display:flex;
   gap:24px;
   width:100%;
-  margin-top:24px;
+  margin-top:28px;
 }}
 
 .info-card {{
   flex:1;
   padding:22px;
-  border-radius:18px;
+  border-radius:20px;
   background:#ffffff;
-  border:5px solid rgba(0,0,0,0.08);
+  border:1px solid rgba(0,0,0,0.08);
+  font-family:'Source Sans Pro';
 }}
 
 .bw {{
@@ -80,17 +77,19 @@ components.html(f"""
 .value {{
   font-size:18px;
   font-weight:700;
-  margin-top:4px;
+  margin-top:6px;
 }}
 </style>
 
 <div class="info-row">
 
+  <!-- LOCATION — same width logic as Points+Rank -->
   <div class="info-card bw">
     <div class="label">LOCATION</div>
     <div class="value">{user.get("loc_name","—")}</div>
   </div>
 
+  <!-- ROLE -->
   <div class="info-card">
     <div class="label">ROLE</div>
     <div class="value">{user.get("role_name","—")}</div>
