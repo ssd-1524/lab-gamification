@@ -40,8 +40,22 @@ tier = rank_data.get("rank", "—")
 badge = rank_data.get("badge_image") or ""
 
 # ---------------- Header ---------------- #
-st.markdown("## 👋 Welcome back")
-st.markdown(f"### **{user['name']}**")
+st.markdown(f"""
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap">
+<div style="
+    margin-top:6px;
+    margin-bottom:22px;
+    font-family:'Source Sans Pro' !important;
+">
+  <div style="font-size:13px; font-weight:600; color:#64748b; letter-spacing:.04em;">
+    WELCOME BACK
+  </div>
+  <div style="font-size:34px; font-weight:800; color:#0f172a; margin-top:4px;">
+    {user['name']}
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 
 components.html(f"""
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap">
