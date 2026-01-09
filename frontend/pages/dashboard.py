@@ -48,7 +48,7 @@ st.markdown(f"""
     font-family:'Source Sans Pro' !important;
 ">
   <div style="font-size:13px; font-weight:600; color:#64748b; letter-spacing:.04em;">
-    WELCOME BACK
+    WELCOME
   </div>
   <div style="font-size:34px; font-weight:800; color:#0f172a; margin-top:4px;">
     {user['name']}
@@ -185,3 +185,25 @@ if not quiz_completed:
         if st.button("🚀 Start Quiz", use_container_width=True):
             log_event("dashboard", "start_quiz_click")
             st.switch_page("pages/quizzes.py")
+
+quiz_status = requests.get(f"{API_BASE_URL}/quizzes/status", headers=headers)
+
+if quiz_status.status_code == 200 and quiz_status.json().get("completed", False):
+    st.subheader("⏳ Next Quiz Available In")
+
+    resp = requests.get(f"{API_BASE_URL}/quizzes/next-available", headers=headers)
+    if resp.status_code == 200:
+        remaining = resp.json()["seconds_remaining"]
+        timer_placeholder = st.empty()
+
+        while remaining > 0:
+            hrs, rem = divmod(remaining, 3600)
+            mins, secs = divmod(rem, 60)
+            timer_placeholder.metric(
+                label="Next Daily Quiz",
+                value=f"{hrs:02d}:{mins:02d}:{secs:02d}",
+            )
+            time.sleep(1)
+            remaining -= 1
+
+    st.stop()
