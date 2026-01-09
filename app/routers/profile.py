@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.routers.deps import get_authenticated_user, get_db
-from app.services.plant_service import get_plant_state as resolve_plant_stage
+from app.services.plant_service import get_plant_stage
 from app.services.plant_config import PLANT_STAGE_CONFIG
 
 router = APIRouter(
@@ -119,52 +119,54 @@ def get_plant_state(
     db: Session = Depends(get_db),
 ):
     user_id = user["user_id"]
-
-    # ---------------- Get streak info ----------------
+ 
+    # 1️⃣ Fetch streak data from v2 view (NOW includes last_day)
     streak_row = db.execute(
         text("""
-            SELECT streak, longest_streak
-            FROM login_streak_view
+            SELECT
+                streak,
+                longest_streak,
+                last_day
+            FROM login_streak_view_v2
             WHERE user_id = :user_id
         """),
         {"user_id": user_id},
     ).fetchone()
-
+ 
     streak = streak_row.streak if streak_row else 0
     longest_streak = streak_row.longest_streak if streak_row else 0
-
-    # ---------------- Get last login ----------------
-    last_login = db.execute(
+    last_streak_day = streak_row.last_day if streak_row else None
+ 
+    # 2️⃣ Fetch last replant time
+    replant_row = db.execute(
         text("""
-            SELECT MAX(login_time)
-            FROM sessions
-            WHERE user_id = :user_id
-        """),
-        {"user_id": user_id},
-    ).scalar()
-
-    # ---------------- Get last replant ----------------
-    replanted_at = db.execute(
-        text("""
-            SELECT MAX(timestamp)
+            SELECT MAX(timestamp) AS replanted_at
             FROM events
             WHERE user_id = :user_id
               AND feature = 'plant'
-              AND action = 'replanted'
+              AND action = 'replant_clicked'
         """),
         {"user_id": user_id},
-    ).scalar()
-
-    # ---------------- Resolve plant stage ----------------
-    plant_stage = resolve_plant_stage(
-        streak=streak,
-        longest_streak=longest_streak,
-        replanted_at=replanted_at,
-        last_login=last_login,
+    ).fetchone()
+ 
+    replanted_at = replant_row.replanted_at if replant_row else None
+ 
+    # 3️⃣ Decide replant validity (STABLE & CORRECT)
+    has_replanted_after_break = (
+        replanted_at is not None
+        and last_streak_day is not None
+        and replanted_at.date() > last_streak_day
     )
-
+ 
+    # 4️⃣ Decide plant stage
+    plant_stage = get_plant_stage(
+        streak,
+        longest_streak,
+        has_replanted_after_break,
+    )
+ 
     plant_ui = PLANT_STAGE_CONFIG[plant_stage]
-
+ 
     return {
         "streak": streak,
         "plant_stage": plant_stage,
