@@ -85,6 +85,8 @@ components.html(f"""
     border-radius:18px;
     border:1px solid rgba(0,0,0,0.06);
     background:#ffffff;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",
+                 "Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }}
 
 .bw-card {{
@@ -93,9 +95,10 @@ components.html(f"""
 }}
 
 .label {{
-    font-size:13px;
+    font-size:12px;
     font-weight:700;
-    opacity:0.75;
+    letter-spacing:0.04em;
+    opacity:0.7;
 }}
 
 .points {{
@@ -105,17 +108,19 @@ components.html(f"""
 
 .wallet-btn {{
     margin-top:16px;
-    padding:8px 16px;
+    padding:9px 18px;
     border:1px solid rgba(255,255,255,0.25);
     border-radius:10px;
     font-weight:700;
     display:inline-block;
+    font-size:14px;
 }}
 
 .tier-card .title {{
-    font-size:13px;
+    font-size:12px;
     font-weight:700;
     color:#64748b;
+    letter-spacing:0.04em;
 }}
 
 .tier {{
@@ -123,7 +128,7 @@ components.html(f"""
     font-weight:800;
     margin-top:4px;
 }}
-
+                
 .tier-body {{
     display:flex;
     align-items:center;
