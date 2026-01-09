@@ -16,6 +16,48 @@ API_BASE_URL = "https://lab-gamification.onrender.com"
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
 IST = timezone("Asia/Kolkata")
 
+st.markdown("""
+<style>
+/* Sidebar background */
+section[data-testid="stSidebar"] {
+    background: #FF4B4B;
+}
+
+/* Sidebar text */
+section[data-testid="stSidebar"] * {
+    color: white !important;
+    font-weight: 600;
+}
+
+/* Selected page highlight */
+section[data-testid="stSidebar"] [aria-selected="true"] {
+    background: rgba(255,255,255,0.18) !important;
+    border-radius: 8px;
+}
+
+/* Page labels */
+section[data-testid="stSidebar"] .css-1d391kg span {
+    text-transform: capitalize;
+    font-size: 14px;
+}
+
+/* Replace streamlit_app with Home Page */
+section[data-testid="stSidebar"] span:has(> div:contains("streamlit_app")) {
+    display: none;
+}
+section[data-testid="stSidebar"] a[href*="streamlit_app"] span::after {
+    content: "Home Page";
+}
+
+/* Hover effect */
+section[data-testid="stSidebar"] a:hover {
+    background: rgba(255,255,255,0.12) !important;
+    border-radius: 8px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # ---------------- Security ---------------- #
 if not st.session_state.get("is_authenticated"):
     st.warning("Please login to access the dashboard.")
