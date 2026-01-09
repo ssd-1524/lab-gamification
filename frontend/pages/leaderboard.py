@@ -2,8 +2,10 @@ import streamlit as st
 import requests
 from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
+from utils.theme import apply_theme
 
 API_BASE_URL = "https://lab-gamification.onrender.com"
+apply_theme()
 
 if not is_authenticated():
     st.switch_page("pages/auth.py")

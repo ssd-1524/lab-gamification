@@ -2,9 +2,10 @@ import streamlit as st
 from utils.api_client import get_roles, get_locations, signup_user, login_user
 from utils.sessions import set_authenticated, is_authenticated
 from utils.events import log_event
+from utils.theme import apply_theme
 
 st.set_page_config(page_title="Auth - Stomata Labs", page_icon="🔐")
-
+apply_theme()
 # -------- Auto-load roles & locations once --------
 if not st.session_state.get("roles_loaded"):
     try:

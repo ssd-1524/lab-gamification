@@ -10,12 +10,14 @@ from utils.events import log_event
 from utils.sessions import get_access_token
 from utils.api_client import get_plant_state
 from utils.ui_utils import FEATURE_GUIDES
+from utils.theme import apply_theme
+
 
 API_BASE_URL = "https://lab-gamification.onrender.com"
 
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
 IST = timezone("Asia/Kolkata")
-
+apply_theme()
 
 # ---------------- Security ---------------- #
 if not st.session_state.get("is_authenticated"):

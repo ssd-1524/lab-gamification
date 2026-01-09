@@ -3,10 +3,12 @@ import streamlit as st
 
 from utils.sessions import is_authenticated
 from utils.ui_utils import inject_apple_styles, FEATURE_GUIDES
+from utils.theme import apply_theme
 
 
 # --- Page Setup ---
 st.set_page_config(page_title="Guides", layout="wide")
+apply_theme()
 st.markdown("<div class='feature-guide-root'>", unsafe_allow_html=True)
 inject_apple_styles()
 

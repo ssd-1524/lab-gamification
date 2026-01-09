@@ -7,9 +7,11 @@ import streamlit.components.v1 as components
 
 from utils.sessions import get_access_token, is_authenticated
 from utils.events import log_event
+from utils.theme import apply_theme
+
 
 # ------------------ Guards ------------------ #
-
+apply_theme()
 if not is_authenticated():
     st.switch_page("pages/auth.py")
 

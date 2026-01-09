@@ -1,50 +1,38 @@
-from __future__ import annotations
-
 import streamlit as st
 
-
 def apply_theme() -> None:
-    """Apply black and neon-green theme across the app."""
-    st.markdown(
-        """
-        <style>
-        html, body, [class*="stApp"] {
-            background-color: #050505;
-            color: #00ff7f;
-        }
+    st.markdown("""
+    <style>
+    /* -------- Base button -------- */
+    div.stButton > button {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        border-radius: 10px !important;
+        border: none !important;
+        padding: 0.55rem 1.1rem !important;
+        box-shadow: none !important;
+    }
 
-        h1, h2, h3, h4 {
-            color: #00ff7f;
-        }
+    /* -------- Hover -------- */
+    div.stButton > button:hover {
+        background-color: #1f1f1f !important;
+        color: #ffffff !important;
+    }
 
-        .stButton>button {
-            background-color: #050505;
-            color: #00ff7f;
-            border: 1px solid #00ff7f;
-            border-radius: 8px;
-            box-shadow: 0 0 8px #00ff7f;
-        }
+    /* -------- Focus / Active -------- */
+    div.stButton > button:focus,
+    div.stButton > button:active {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.25) !important;
+    }
 
-        .stButton>button:hover {
-            background-color: #00ff7f;
-            color: #050505;
-        }
-
-        .stTextInput>div>div>input,
-        .stSelectbox>div>div>div {
-            background-color: #050505;
-            color: #00ff7f;
-            border: 1px solid #00ff7f;
-        }
-
-        .stMetric {
-            background-color: #050505;
-            border: 1px solid #00ff7f;
-            box-shadow: 0 0 10px #00ff7f;
-            border-radius: 10px;
-            padding: 10px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    /* -------- Disabled -------- */
+    div.stButton > button:disabled {
+        background-color: #3a3a3a !important;
+        color: #d1d1d1 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)

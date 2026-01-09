@@ -11,13 +11,15 @@ from typing import List, Dict, Any, Optional
 
 from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
+from utils.theme import apply_theme
+
 
 IST = pytz.timezone("Asia/Kolkata")
 API_BASE = "https://lab-gamification.onrender.com"
 
 # ========== Page config ==========
 st.set_page_config(page_title="Anomaly Detection", layout="wide")
-
+apply_theme()
 # ========== Guards ==========
 if not is_authenticated():
     st.switch_page("pages/auth.py")

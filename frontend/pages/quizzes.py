@@ -8,9 +8,10 @@ import streamlit as st
 
 from utils.sessions import get_access_token, is_authenticated
 from utils.events import log_event
+from utils.theme import apply_theme
 
 API_BASE_URL = "https://lab-gamification.onrender.com"
-
+apply_theme()
 # ------------------ Guards ------------------ #
 
 if not is_authenticated():
