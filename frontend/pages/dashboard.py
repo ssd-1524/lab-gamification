@@ -4,7 +4,7 @@ import time
 import requests
 from datetime import datetime
 from pytz import timezone
-from textwrap import dedent
+import streamlit.components.v1 as components
 
 from utils.api_client import get_user_points
 from utils.events import log_event
@@ -45,6 +45,10 @@ streak = streak_resp.json().get("streak", 0) if streak_resp.status_code == 200 e
 # ---------------- Rank ---------------- #
 rank_resp = requests.get(f"{API_BASE_URL}/users/me/rank", headers=headers)
 rank_data = rank_resp.json() if rank_resp.status_code == 200 else {}
+points = rank_data.get("points", 0)
+rank = rank_data.get("position", "—")
+tier = rank_data.get("rank", "—")
+badge = rank_data.get("badge_image") or ""
 
 # ---------------- Header ---------------- #
 st.markdown("## 👋 Welcome back")
@@ -66,78 +70,68 @@ st.divider()
 
 # ---------------- Metrics ---------------- #
 
-st.markdown("""
+components.html(f"""
 <style>
-.metric-row {
+.metric-row {{
     display:flex;
     gap:20px;
     width:100%;
-}
+    margin-bottom:24px;
+}}
 
-.metric-card {
+.metric-card {{
     flex:1;
     padding:22px;
     border-radius:18px;
     border:1px solid rgba(0,0,0,0.06);
     background:#ffffff;
-}
+}}
 
-.bw-card {
+.bw-card {{
     background:#0b0b0b;
     color:white;
-}
+}}
 
-.bw-card .label {
+.label {{
     font-size:13px;
     font-weight:700;
-    color:rgba(255,255,255,0.7);
-}
+    opacity:0.75;
+}}
 
-.bw-card .points {
+.points {{
     font-size:42px;
     font-weight:800;
-}
+}}
 
-.bw-card .rank {
-    text-align:right;
-}
-
-.wallet-btn {
+.wallet-btn {{
     margin-top:16px;
     padding:8px 16px;
     border:1px solid rgba(255,255,255,0.25);
     border-radius:10px;
     font-weight:700;
     display:inline-block;
-}
+}}
 
-.tier-card .title {
+.tier-card .title {{
     font-size:13px;
     font-weight:700;
     color:#64748b;
-}
+}}
 
-.tier-card .tier {
+.tier {{
     font-size:22px;
     font-weight:800;
     margin-top:4px;
-}
+}}
 
-.tier-body {
+.tier-body {{
     display:flex;
     align-items:center;
     gap:14px;
     margin-top:14px;
-}
+}}
 </style>
-""", unsafe_allow_html=True)
 
-points = rank_data.get("points", 0)
-rank = rank_data.get("position", "—")
-tier = rank_data.get("rank", "—")
-badge = rank_data.get("badge_image") or ""
-
-st.markdown(f"""
 <div class="metric-row">
     <div class="metric-card bw-card">
         <div style="display:flex;justify-content:space-between;">
@@ -145,13 +139,13 @@ st.markdown(f"""
                 <div class="label">POINTS</div>
                 <div class="points">{points}</div>
             </div>
-            <div class="rank">
+            <div style="text-align:right;">
                 <div class="label">RANK</div>
                 <div class="points" style="font-size:24px;">{rank}</div>
             </div>
         </div>
 
-        <div style="margin-top:12px;font-size:14px;color:rgba(255,255,255,0.85);">
+        <div style="margin-top:12px;font-size:14px;opacity:0.85;">
             Keep your streak — complete daily training to earn more points.
         </div>
 
@@ -167,10 +161,9 @@ st.markdown(f"""
         </div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""", height=220)
 
 st.divider()
-
 
 # ---------------- Plant Growth Gamification ---------------- #
 with st.container(border=True):
