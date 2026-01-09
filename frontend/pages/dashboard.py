@@ -63,8 +63,7 @@ components.html(f"""
   gap: 28px;
   width: 100%;
   margin: 36px 0;
-  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
-               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
 }}
 
 .metric-card {{
