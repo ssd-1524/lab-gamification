@@ -20,6 +20,16 @@ st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layo
 IST = timezone("Asia/Kolkata")
 apply_theme()
 
+components.html("""
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+html, body, [class*="css"], .stMarkdown, .stButton > button, input, textarea {
+    font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+</style>
+""", height=0)
+
 # ---------------- Security ---------------- #
 if not st.session_state.get("is_authenticated"):
     st.warning("Please login to access the dashboard.")
@@ -80,13 +90,8 @@ components.html(f"""
 }}
 
 .metric-card {{
-    flex:1;
-    padding:22px;
-    border-radius:18px;
-    border:1px solid rgba(0,0,0,0.06);
-    background:#ffffff;
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",
-                 "Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }}
 
 .bw-card {{
@@ -104,16 +109,6 @@ components.html(f"""
 .points {{
     font-size:42px;
     font-weight:800;
-}}
-
-.wallet-btn {{
-    margin-top:16px;
-    padding:9px 18px;
-    border:1px solid rgba(255,255,255,0.25);
-    border-radius:10px;
-    font-weight:700;
-    display:inline-block;
-    font-size:14px;
 }}
 
 .tier-card .title {{
@@ -153,8 +148,6 @@ components.html(f"""
         <div style="margin-top:12px;font-size:14px;opacity:0.85;">
             Keep your streak — complete daily training to earn more points.
         </div>
-
-        <div class="wallet-btn">View Wallet</div>
     </div>
 
     <div class="metric-card tier-card">
