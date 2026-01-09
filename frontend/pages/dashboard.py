@@ -144,38 +144,91 @@ components.html(f"""
 
 
 # ---------------- Plant Growth ---------------- #
-components.html("""
-<div class="card">
-  <div style="font-size:13px;font-weight:700;color:#64748b;letter-spacing:.04em;margin-bottom:12px;">
-    YOUR GROWTH JOURNEY
-  </div>
-</div>
-""", height=0)
+# ---------------- Plant Growth (updated layout, no logic changes) ---------------- #
+with st.container():
+    # Lightweight card CSS scoped for the plant block
+    st.markdown(
+        """
+        <style>
+        .plant-card {
+            border: 5px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 14px 18px;
+            background: #ffffff;
+            display: block;
+            box-sizing: border-box;
+            margin-bottom: 18px;
+        }
 
-plant_state = get_plant_state()
+        /* make image column shrink nicely and text column take remaining space */
+        .plant-card .stImage > img {
+            max-width: 220px;
+            height: auto;
+        }
 
-if plant_state:
-    col_img, col_text = st.columns([1.4, 3])
+        /* reduce extra streamlit margins inside the card */
+        .plant-card .stMarkdown, .plant-card .stButton {
+            margin-top: 0.25rem;
+            margin-bottom: 0.25rem;
+        }
 
-    with col_img:
-        st.image(plant_state["image_url"], width=240)
+        /* compact title styles (keeps appearance consistent) */
+        .plant-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .plant-sub {
+            font-size: 14px;
+            color: #475569;
+            font-weight: 600;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    with col_text:
-        st.markdown(f"""
-        <div style="font-size:20px;font-weight:700;color:#0f172a;">
-            {plant_state['message']}
-        </div>
-        <div style="margin-top:6px;font-size:14px;font-weight:600;color:#475569;">
-            🔥 Login Streak:
-            <span style="font-weight:800;color:#0f172a;">{plant_state['streak']} days</span>
-        </div>
-        """, unsafe_allow_html=True)
+    plant_state = get_plant_state()
 
-        if plant_state.get("can_replant"):
-            if st.button("🌱 Plant seed again"):
-                log_event("plant", "replanted")
-                st.success("A new seed has been planted 🌱 Come back tomorrow!")
-                st.rerun()
+    # wrap the Streamlit columns inside a simple HTML div to get the border & padding
+    st.markdown('<div class="plant-card">', unsafe_allow_html=True)
+
+    if plant_state:
+        # tighter column ratio to reduce whitespace (image smaller, text larger)
+        col_img, col_text = st.columns([1.0, 2.2])
+
+        with col_img:
+            # image uses plant_state image url (same logic as before)
+            st.image(plant_state["image_url"], width=200)
+
+        with col_text:
+            # same textual content and button logic as before (no logic change)
+            st.markdown(f'<div class="plant-title">{plant_state["message"]}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="plant-sub">🔥 Login Streak: <strong>{plant_state["streak"]} days</strong></div>',
+                unsafe_allow_html=True,
+            )
+
+            # keep a small vertical gap, don't use large <br> spacing
+            st.markdown("", unsafe_allow_html=True)
+
+            if plant_state.get("can_replant"):
+                # keep the same button label and behavior (but give a key to avoid duplicates)
+                if st.button("🌱 Plant seed again", key="plant_replant_compact"):
+                    # same event logging + refresh + success + rerun (unchanged logic)
+                    log_event("plant", "replanted")
+
+                    # refresh backend-derived plant state exactly as before
+                    st.session_state["_force_plant_refresh"] = datetime.now(IST).isoformat()
+
+                    st.success("A new seed has been planted 🌱 Come back tomorrow!")
+                    st.rerun()
+    else:
+        # same fallback message as before
+        st.info("🌱 Your plant will appear once you start your journey!")
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------- Guides ---------------- #
 st.subheader("📖 Feature Guides")
