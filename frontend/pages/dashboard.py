@@ -141,9 +141,7 @@ components.html(f"""
 
     <div class="tier-body">
       <img src="{badge}" height="54"/>
-      <div style="font-size:14px;font-weight:600;color:#475569">
-        Membership
-      </div>
+      
     </div>
   </div>
 
