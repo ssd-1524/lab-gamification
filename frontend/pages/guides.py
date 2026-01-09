@@ -20,7 +20,7 @@ guide = FEATURE_GUIDES.get(guide_key, FEATURE_GUIDES["quiz"])
 
 st.markdown(
     f"""
-    <h2 style="color: #ffffff; margin-bottom: 0.2em;">
+    <h2 style="color: var(--text-color); margin-bottom: 0.2em;">
         📖 Guide: {guide['title']}
     </h2>
     """,
@@ -40,7 +40,7 @@ for idx, step in enumerate(guide["steps"], start=1):
             padding: 14px 16px;
             margin-bottom: 10px;
             border: 5px solid rgba(0, 0, 0, 0.08);
-            border-left: 5px solid #ffffff;
+            border-left: 5px solid #000000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         ">
             <strong>Step {idx}:</strong> {step}
