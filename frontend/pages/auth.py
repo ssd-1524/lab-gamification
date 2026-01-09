@@ -61,7 +61,10 @@ with tab_login:
 
                     st.session_state.show_login_popup = True
                     st.success(f"Welcome back, {res['user'].get('name', 'User')}!")
-                    st.experimental_rerun()
+
+                    # 🔁 HARD NAVIGATION FIX
+                    st.switch_page("pages/dashboard.py")
+
                 else:
                     reason = res.get("detail", "unknown") if isinstance(res, dict) else str(res)
                     log_event("auth", "login_failed", {"reason": reason})
@@ -153,7 +156,22 @@ with tab_signup:
 
                 if isinstance(res, dict) and res.get("status") == "success":
                     log_event("auth", "signup_success")
-                    st.success("Account created! You can now log in.")
+
+                    # 🔐 AUTO LOGIN AFTER SIGNUP
+                    try:
+                        login_res = login_user({"email": new_email, "password": new_password})
+                    except Exception as e:
+                        st.error("Signup successful, but auto-login failed. Please login manually.")
+                        st.stop()
+
+                    if isinstance(login_res, dict) and "access_token" in login_res:
+                        set_authenticated(token=login_res["access_token"], user=login_res["user"])
+                        log_event("auth", "signup_auto_login_success")
+                        st.success(f"Welcome, {login_res['user'].get('name', 'User')}!")
+                        st.switch_page("pages/dashboard.py")
+                    else:
+                        st.error("Signup succeeded but auto-login failed. Please login.")
+
                 else:
                     reason = res.get("detail", "unknown") if isinstance(res, dict) else str(res)
                     log_event("auth", "signup_failed", {"reason": reason})
