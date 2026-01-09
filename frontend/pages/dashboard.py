@@ -86,7 +86,7 @@ components.html(f"""
 }}
 
 .rank {{
-  font-size:26px;
+  font-size:42px;
   font-weight:800;
   text-align:right;
 }}
@@ -123,9 +123,6 @@ components.html(f"""
     <div class="value" style="font-size:22px;font-weight:800">{tier}</div>
     <div style="display:flex;align-items:center;gap:14px;margin-top:14px">
       <img src="{badge}" height="52"/>
-      <div style="font-size:14px;font-weight:600;color:#475569">
-        Membership
-      </div>
     </div>
   </div>
 </div>
