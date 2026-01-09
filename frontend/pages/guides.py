@@ -10,7 +10,6 @@ from utils.theme import apply_theme
 st.set_page_config(page_title="Guides", layout="wide")
 apply_theme()
 st.markdown("<div class='feature-guide-root'>", unsafe_allow_html=True)
-inject_apple_styles()
 
 if not is_authenticated():
     st.switch_page("pages/auth.py")
@@ -58,26 +57,15 @@ other_tips = {k: v for k, v in FEATURE_GUIDES.items() if k != guide_key}
 
 if other_tips:
     cols = st.columns(len(other_tips))
-
     for idx, (key, data) in enumerate(other_tips.items()):
         with cols[idx]:
-            with st.container(border=True):
-                st.markdown(
-                    f"""
-                    <div style="font-size:16px;font-weight:700;margin-bottom:6px">
-                        {data['title']}
-                    </div>
-                    <div style="font-size:13px;color:#475569">
-                        {data['subtitle']}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+            card_label = f"🎯 {data['title']}\n{data['subtitle']}"
 
-                if st.button(
-                    "Explore",
-                    key=f"card_btn_{key}",
-                    use_container_width=True,
-                ):
-                    st.session_state.selected_guide = key
-                    st.rerun()
+            if st.button(
+                label=card_label,
+                key=f"card_btn_{key}",
+                use_container_width=True,
+            ):
+                st.session_state.selected_guide = key
+                st.rerun()
+st.markdown("</div>", unsafe_allow_html=True)
