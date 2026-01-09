@@ -99,36 +99,37 @@ with tab_signup:
 
         # Role selectbox (uses loaded session state)
         def _role_format(x):
-            return x.get("role_name") if x else "No roles available"
+            return x.get("role_name") if x else ""
 
-        selected_role = None
-        if st.session_state.roles_loaded and st.session_state.roles_data:
-            selected_role = st.selectbox(
-                "Your Role",
-                options=st.session_state.roles_data,
-                format_func=_role_format,
-                key="select_role",
-            )
-        else:
-            st.info("Click 'Load roles & locations' to populate role & location lists.")
+        role_options = st.session_state.roles_data if st.session_state.roles_loaded else []
+
+        selected_role = st.selectbox(
+            "Your Role",
+            options=role_options,
+            format_func=_role_format,
+            disabled=not st.session_state.roles_loaded,
+            placeholder="Click 'Load roles & locations' to populate",
+            key="select_role",
+        )
 
         # Show location + plan_type together for clarity
         def _loc_format(x):
             if not x:
-                return "No locations available"
-            plan_type = x.get("plan_type")
-            if plan_type:
-                return f"{x.get('loc_name', '')} — {plan_type}"
-            return x.get("loc_name", "")
+                return ""
+            plan = x.get("plan_type")
+            return f"{x.get('loc_name', '')} — {plan}" if plan else x.get("loc_name", "")
 
-        selected_location = None
-        if st.session_state.locations_loaded and st.session_state.locations_data:
-            selected_location = st.selectbox(
-                "Primary Location",
-                options=st.session_state.locations_data,
-                format_func=_loc_format,
-                key="select_location",
-            )
+        location_options = st.session_state.locations_data if st.session_state.locations_loaded else []
+
+        selected_location = st.selectbox(
+            "Primary Location",
+            options=location_options,
+            format_func=_loc_format,
+            disabled=not st.session_state.locations_loaded,
+            placeholder="Click 'Load roles & locations' to populate",
+            key="select_location",
+        )
+
 
         submit_signup = st.form_submit_button("Sign Up", use_container_width=True)
 
