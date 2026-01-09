@@ -53,6 +53,25 @@ section[data-testid="stSidebar"] a:hover {
 footer { visibility: hidden; }
 
 </style>
+<script>
+const capitalize = txt =>
+  txt.replace(/\\b\\w/g, l => l.toUpperCase());
+
+function fixSidebarLabels() {
+  const links = window.parent.document.querySelectorAll(
+    'section[data-testid="stSidebar"] a span'
+  );
+  links.forEach(el => {
+    const clean = capitalize(el.innerText.replaceAll("_", " "));
+    el.innerText = clean;
+  });
+}
+
+const observer = new MutationObserver(() => fixSidebarLabels());
+observer.observe(window.parent.document.body, { childList: true, subtree: true });
+
+setTimeout(fixSidebarLabels, 300);
+</script>
 """, unsafe_allow_html=True)
 
 
