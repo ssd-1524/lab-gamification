@@ -23,36 +23,43 @@ section[data-testid="stSidebar"] {
     background: #FF4B4B;
 }
 
-/* Sidebar text */
-section[data-testid="stSidebar"] * {
+/* Sidebar links */
+section[data-testid="stSidebar"] a {
     color: white !important;
     font-weight: 600;
-}
-
-/* Selected page highlight */
-section[data-testid="stSidebar"] [aria-selected="true"] {
-    background: rgba(255,255,255,0.18) !important;
     border-radius: 8px;
+    padding: 6px 10px;
 }
 
-/* Page labels */
-section[data-testid="stSidebar"] .css-1d391kg span {
-    text-transform: capitalize;
-    font-size: 14px;
+/* Selected item */
+section[data-testid="stSidebar"] a[aria-selected="true"] {
+    background: rgba(255,255,255,0.18) !important;
 }
 
-/* Replace streamlit_app with Home Page */
-section[data-testid="stSidebar"] span:has(> div:contains("streamlit_app")) {
-    display: none;
-}
-section[data-testid="stSidebar"] a[href*="streamlit_app"] span::after {
-    content: "Home Page";
-}
-
-/* Hover effect */
+/* Hover */
 section[data-testid="stSidebar"] a:hover {
     background: rgba(255,255,255,0.12) !important;
-    border-radius: 8px;
+}
+
+/* Capitalize labels */
+section[data-testid="stSidebar"] a span {
+    text-transform: capitalize;
+}
+
+/* Hide raw page filenames */
+section[data-testid="stSidebar"] a span:contains("streamlit_app") {
+    display: none;
+}
+
+/* Replace Home label cleanly */
+section[data-testid="stSidebar"] a[href*="streamlit_app"] span {
+    visibility: hidden;
+}
+section[data-testid="stSidebar"] a[href*="streamlit_app"]::after {
+    content: "Home Page";
+    color: white;
+    font-weight: 700;
+    margin-left: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
