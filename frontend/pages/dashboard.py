@@ -56,96 +56,93 @@ st.divider()
 
 # ---------------- Metrics ---------------- #
 components.html(f"""
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap">
+
 <style>
-.metric-row {{
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 28px;
-  width: 100%;
-  margin: 36px 0;
+* {{
   font-family: 'Source Sans Pro' !important;
 }}
-                
-.metric-card {{
-  padding: 28px;
-  border-radius: 22px;
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,0.08);
+
+.metric-row {{
+  display:flex;
+  gap:24px;
+  width:100%;
+  margin:32px 0;
 }}
 
-.bw-card {{
-  background: #0b0b0b;
-  color: #ffffff;
+.metric-card {{
+  flex:1.6;
+  padding:26px;
+  border-radius:20px;
+  background:#0b0b0b;
+  color:white;
+}}
+
+.tier-card {{
+  flex:1;
+  background:white;
+  color:black;
+  border:1px solid rgba(0,0,0,.08);
 }}
 
 .label {{
-  font-size: 12px;
-  font-weight: 700;
-  opacity: 0.65;
-  letter-spacing: 0.04em;
+  font-size:12px;
+  font-weight:700;
+  opacity:.7;
 }}
 
 .points {{
-  font-size: 48px;
-  font-weight: 800;
-  margin-top: 2px;
+  font-size:44px;
+  font-weight:800;
 }}
 
 .rank {{
-  text-align: right;
-}}
-
-.subtext {{
-  margin-top: 14px;
-  font-size: 14px;
-  opacity: 0.85;
+  text-align:right;
 }}
 
 .tier {{
-  font-size: 26px;
-  font-weight: 800;
-  margin-top: 6px;
+  font-size:24px;
+  font-weight:800;
 }}
 
 .tier-body {{
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 16px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:12px;
 }}
 </style>
 
 <div class="metric-row">
 
-  <div class="metric-card bw-card">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div class="metric-card">
+    <div style="display:flex;justify-content:space-between">
       <div>
         <div class="label">POINTS</div>
         <div class="points">{points}</div>
       </div>
       <div class="rank">
         <div class="label">RANK</div>
-        <div class="points" style="font-size:30px">{rank}</div>
+        <div class="points" style="font-size:28px">{rank}</div>
       </div>
     </div>
 
-    <div class="subtext">
+    <div style="margin-top:14px;font-size:14px;opacity:.85">
       Keep your streak — complete daily training to earn more points.
     </div>
   </div>
 
-  <div class="metric-card">
+  <div class="metric-card tier-card">
     <div class="label">CURRENT TIER</div>
     <div class="tier">{tier}</div>
-
     <div class="tier-body">
-      <img src="{badge}" height="54"/>
-      
+      <img src="{badge}" height="52"/>
+      <div style="font-size:14px;font-weight:600;color:#475569">Membership</div>
     </div>
   </div>
 
 </div>
-""", height=240)
+""", height=220)
 
 
 # ---------------- Plant Growth ---------------- #
