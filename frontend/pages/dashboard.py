@@ -46,19 +46,19 @@ st.markdown(f"### **{user['name']}**")
 components.html(f"""
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap">
 <style>
-.info-row {{
+.row {{
   display:flex;
   gap:24px;
   width:100%;
-  margin-top:28px;
+  margin:28px 0;
 }}
 
-.info-card {{
+.card {{
   flex:1;
-  padding:22px;
+  padding:24px;
   border-radius:20px;
+  border:5px solid rgba(0,0,0,0.08);
   background:#ffffff;
-  border:1px solid rgba(0,0,0,0.08);
   font-family:'Source Sans Pro';
 }}
 
@@ -79,114 +79,57 @@ components.html(f"""
   font-weight:700;
   margin-top:6px;
 }}
-</style>
-
-<div class="info-row">
-
-  <!-- LOCATION — same width logic as Points+Rank -->
-  <div class="info-card bw">
-    <div class="label">LOCATION</div>
-    <div class="value">{user.get("loc_name","—")}</div>
-  </div>
-
-  <!-- ROLE -->
-  <div class="info-card">
-    <div class="label">ROLE</div>
-    <div class="value">{user.get("role_name","—")}</div>
-  </div>
-
-</div>
-""", height=120)
-
-# ---------------- Metrics ---------------- #
-components.html(f"""
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap">
-
-<style>
-* {{
-  font-family: 'Source Sans Pro' !important;
-}}
-
-.metric-row {{
-  display:flex;
-  gap:24px;
-  width:100%;
-  margin:32px 0;
-}}
-
-.metric-card {{
-  flex:1.6;
-  padding:26px;
-  border-radius:20px;
-  background:#0b0b0b;
-  color:white;
-}}
-
-.tier-card {{
-  flex:1;
-  background:white;
-  color:black;
-  border:5px solid rgba(0,0,0,.08);
-}}
-
-.label {{
-  font-size:12px;
-  font-weight:700;
-  opacity:.7;
-}}
 
 .points {{
-  font-size:44px;
+  font-size:42px;
   font-weight:800;
 }}
 
 .rank {{
-  text-align:right;
-}}
-
-.tier {{
-  font-size:24px;
+  font-size:26px;
   font-weight:800;
-}}
-
-.tier-body {{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  margin-top:12px;
+  text-align:right;
 }}
 </style>
 
-<div class="metric-row">
+<div class="row">
+  <div class="card ">
+    <div class="label">LOCATION</div>
+    <div class="value">{user.get("loc_name","—")}</div>
+  </div>
 
-  <div class="metric-card">
+  <div class="card bw">
+    <div class="label">ROLE</div>
+    <div class="value">{user.get("role_name","—")}</div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card bw">
     <div style="display:flex;justify-content:space-between">
       <div>
         <div class="label">POINTS</div>
         <div class="points">{points}</div>
       </div>
-      <div class="rank">
+      <div style="text-align:right">
         <div class="label">RANK</div>
-        <div class="points" style="font-size:40px">{rank}</div>
+        <div class="rank">{rank}</div>
       </div>
     </div>
-
-    <div style="margin-top:14px;font-size:14px;opacity:.85">
-      Keep your streak — complete daily training to earn more points.
-    </div>
   </div>
 
-  <div class="metric-card tier-card">
+  <div class="card">
     <div class="label">CURRENT TIER</div>
-    <div class="tier">{tier}</div>
-    <div class="tier-body">
+    <div class="value" style="font-size:22px;font-weight:800">{tier}</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:14px">
       <img src="{badge}" height="52"/>
-      <div style="font-size:14px;font-weight:600;color:#475569">Membership</div>
+      <div style="font-size:14px;font-weight:600;color:#475569">
+        Membership
+      </div>
     </div>
   </div>
-
 </div>
-""", height=220)
+""", height=380)
 
 
 # ---------------- Plant Growth ---------------- #
