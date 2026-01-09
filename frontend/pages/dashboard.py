@@ -123,7 +123,7 @@ components.html(f"""
       </div>
       <div class="rank">
         <div class="label">RANK</div>
-        <div class="points" style="font-size:28px">{rank}</div>
+        <div class="points" style="font-size:40px">{rank}</div>
       </div>
     </div>
 
