@@ -18,15 +18,6 @@ IST = timezone("Asia/Kolkata")
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
 apply_theme()
 
-components.html("""
-<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-html, body, [class*="css"], .stMarkdown, .stButton > button {
-    font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif !important;
-}
-</style>
-""", height=0)
-
 # ---------------- Security ---------------- #
 if not st.session_state.get("is_authenticated"):
     st.warning("Please login to access the dashboard.")
@@ -67,67 +58,79 @@ st.divider()
 components.html(f"""
 <style>
 .metric-row {{
-  display:flex;
-  gap:24px;
-  width:100%;
-  margin:32px 0;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 28px;
+  width: 100%;
+  margin: 36px 0;
+  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }}
 
 .metric-card {{
-  flex:1;
-  padding:26px;
-  border-radius:20px;
-  background:white;
-  border:1px solid rgba(0,0,0,0.08);
+  padding: 28px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
 }}
 
 .bw-card {{
-  background:#0b0b0b;
-  color:white;
+  background: #0b0b0b;
+  color: #ffffff;
 }}
 
 .label {{
-  font-size:12px;
-  font-weight:700;
-  opacity:0.7;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.65;
+  letter-spacing: 0.04em;
 }}
 
 .points {{
-  font-size:44px;
-  font-weight:800;
+  font-size: 48px;
+  font-weight: 800;
+  margin-top: 2px;
 }}
 
 .rank {{
-  text-align:right;
+  text-align: right;
+}}
+
+.subtext {{
+  margin-top: 14px;
+  font-size: 14px;
+  opacity: 0.85;
 }}
 
 .tier {{
-  font-size:24px;
-  font-weight:800;
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 6px;
 }}
 
 .tier-body {{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  margin-top:12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
 }}
 </style>
 
 <div class="metric-row">
 
   <div class="metric-card bw-card">
-    <div style="display:flex;justify-content:space-between">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
         <div class="label">POINTS</div>
         <div class="points">{points}</div>
       </div>
       <div class="rank">
         <div class="label">RANK</div>
-        <div class="points" style="font-size:28px">{rank}</div>
+        <div class="points" style="font-size:30px">{rank}</div>
       </div>
     </div>
-    <div style="margin-top:14px;font-size:14px;opacity:.85">
+
+    <div class="subtext">
       Keep your streak — complete daily training to earn more points.
     </div>
   </div>
@@ -135,8 +138,9 @@ components.html(f"""
   <div class="metric-card">
     <div class="label">CURRENT TIER</div>
     <div class="tier">{tier}</div>
+
     <div class="tier-body">
-      <img src="{badge}" height="52"/>
+      <img src="{badge}" height="54"/>
       <div style="font-size:14px;font-weight:600;color:#475569">
         Membership
       </div>
@@ -144,9 +148,8 @@ components.html(f"""
   </div>
 
 </div>
-""", height=220)
+""", height=240)
 
-st.divider()
 
 # ---------------- Plant Growth ---------------- #
 with st.container(border=True):
