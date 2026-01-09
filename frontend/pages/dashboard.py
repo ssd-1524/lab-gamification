@@ -63,9 +63,9 @@ components.html(f"""
   gap: 28px;
   width: 100%;
   margin: 36px 0;
-  font-family: 'Source Sans Pro', Arial, sans-serif;
+  font-family: 'Source Sans Pro' !important;
 }}
-
+                
 .metric-card {{
   padding: 28px;
   border-radius: 22px;

@@ -12,7 +12,7 @@ def apply_theme() -> None:
         [data-testid="stSidebar"], [data-testid="stHeader"],
         .stMarkdown, .stText, .stMetric, .stButton > button,
         div, span, p, h1, h2, h3, h4, h5, h6 {
-            font-family: 'Source Sans Pro', Arial, sans-serif !important;
+            font-family: 'Source Sans Pro' !important;
         }
 
         /* ---------------- BUTTON THEME ---------------- */
