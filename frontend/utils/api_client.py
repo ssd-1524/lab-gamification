@@ -50,7 +50,7 @@ def get_user_points():
 
     try:
         r = requests.get(
-            f"{API_BASE_URL}/auth/points",
+            f"{API_BASE_URL}/profile/me/rank",
             headers={"Authorization": f"Bearer {token}"},
             timeout=50,
         )

@@ -153,10 +153,11 @@ def get_plant_state(
  
     # 3️⃣ Decide replant validity (STABLE & CORRECT)
     has_replanted_after_break = (
-        replanted_at is not None
-        and last_streak_day is not None
-        and replanted_at.date() > last_streak_day
+    replanted_at is not None
+    and streak == 0
+    and longest_streak > 0
     )
+ 
  
     # 4️⃣ Decide plant stage
     plant_stage = get_plant_stage(

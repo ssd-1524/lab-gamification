@@ -27,4 +27,3 @@ def get_plant_stage(
  
     return "dead"
  
- 
