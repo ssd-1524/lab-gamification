@@ -62,7 +62,7 @@ components.html(f"""
   padding:22px;
   border-radius:18px;
   background:#ffffff;
-  border:1px solid rgba(0,0,0,0.08);
+  border:5px solid rgba(0,0,0,0.08);
 }}
 
 .bw {{
@@ -127,7 +127,7 @@ components.html(f"""
   flex:1;
   background:white;
   color:black;
-  border:1px solid rgba(0,0,0,.08);
+  border:5px solid rgba(0,0,0,.08);
 }}
 
 .label {{
