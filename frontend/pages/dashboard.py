@@ -6,26 +6,23 @@ from datetime import datetime
 from pytz import timezone
 import streamlit.components.v1 as components
 
-from utils.api_client import get_user_points
+from utils.api_client import get_user_points, get_plant_state
 from utils.events import log_event
 from utils.sessions import get_access_token
-from utils.api_client import get_plant_state
 from utils.ui_utils import FEATURE_GUIDES
 from utils.theme import apply_theme
 
-
 API_BASE_URL = "https://lab-gamification.onrender.com"
+IST = timezone("Asia/Kolkata")
 
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
-IST = timezone("Asia/Kolkata")
 apply_theme()
 
 components.html("""
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-html, body, [class*="css"], .stMarkdown, .stButton > button, input, textarea {
-    font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
-                 "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+html, body, [class*="css"], .stMarkdown, .stButton > button {
+    font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 </style>
 """, height=0)
@@ -39,22 +36,13 @@ if not st.session_state.get("is_authenticated"):
 log_event("dashboard", "page_view")
 
 user = st.session_state.user
-points_data = get_user_points()
-
 token = get_access_token()
 headers = {"Authorization": f"Bearer {token}"} if token else {}
 
-# ---------------- Quiz Status ---------------- #
-quiz_resp = requests.get(f"{API_BASE_URL}/quizzes/status", headers=headers)
-quiz_completed = quiz_resp.json().get("completed", False) if quiz_resp.status_code == 200 else False
-
-# ---------------- Streak ---------------- #
-streak_resp = requests.get(f"{API_BASE_URL}/sessions/streak", headers=headers)
-streak = streak_resp.json().get("streak", 0) if streak_resp.status_code == 200 else 0
-
-# ---------------- Rank ---------------- #
+# ---------------- Data ---------------- #
 rank_resp = requests.get(f"{API_BASE_URL}/users/me/rank", headers=headers)
 rank_data = rank_resp.json() if rank_resp.status_code == 200 else {}
+
 points = rank_data.get("points", 0)
 rank = rank_data.get("position", "—")
 tier = rank_data.get("rank", "—")
@@ -66,71 +54,63 @@ st.markdown(f"### **{user['name']}**")
 
 with st.container(border=True):
     col1, col2 = st.columns(2)
-
     with col1:
         st.markdown("📍 **Location**")
         st.markdown(user.get("loc_name", "—"))
-
     with col2:
         st.markdown("🛠️ **Role**")
         st.markdown(user.get("role_name", "—"))
 
 st.divider()
 
-
 # ---------------- Metrics ---------------- #
-
 components.html(f"""
-<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
-
 <style>
 .metric-row {{
-  display: flex;
-  gap: 24px;
-  width: 100%;
-  margin: 28px 0;
+  display:flex;
+  gap:24px;
+  width:100%;
+  margin:32px 0;
 }}
 
 .metric-card {{
-  flex: 1;
-  padding: 26px;
-  border-radius: 20px;
-  background: white;
-  border: 1px solid rgba(0,0,0,0.08);
-  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  flex:1;
+  padding:26px;
+  border-radius:20px;
+  background:white;
+  border:1px solid rgba(0,0,0,0.08);
 }}
 
 .bw-card {{
-  background: #0b0b0b;
-  color: white;
-}}
-
-.points {{
-  font-size: 44px;
-  font-weight: 800;
+  background:#0b0b0b;
+  color:white;
 }}
 
 .label {{
-  font-size: 12px;
-  font-weight: 700;
-  opacity: 0.75;
+  font-size:12px;
+  font-weight:700;
+  opacity:0.7;
+}}
+
+.points {{
+  font-size:44px;
+  font-weight:800;
 }}
 
 .rank {{
-  text-align: right;
+  text-align:right;
 }}
 
 .tier {{
-  font-size: 24px;
-  font-weight: 800;
-  margin-top: 6px;
+  font-size:24px;
+  font-weight:800;
 }}
 
 .tier-body {{
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 14px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:12px;
 }}
 </style>
 
@@ -144,10 +124,9 @@ components.html(f"""
       </div>
       <div class="rank">
         <div class="label">RANK</div>
-        <div class="points" style="font-size:28px">{rank_pos}</div>
+        <div class="points" style="font-size:28px">{rank}</div>
       </div>
     </div>
-
     <div style="margin-top:14px;font-size:14px;opacity:.85">
       Keep your streak — complete daily training to earn more points.
     </div>
@@ -157,7 +136,7 @@ components.html(f"""
     <div class="label">CURRENT TIER</div>
     <div class="tier">{tier}</div>
     <div class="tier-body">
-      <img src="{badge or ''}" height="52"/>
+      <img src="{badge}" height="52"/>
       <div style="font-size:14px;font-weight:600;color:#475569">
         Membership
       </div>
@@ -165,99 +144,52 @@ components.html(f"""
   </div>
 
 </div>
-""", height=200)
+""", height=220)
 
 st.divider()
 
-# ---------------- Plant Growth Gamification ---------------- #
+# ---------------- Plant Growth ---------------- #
 with st.container(border=True):
     st.markdown("## 🌱 Your Growth Journey")
 
     plant_state = get_plant_state()
-
     if plant_state:
-        col_img, col_text = st.columns([2, 3], vertical_alignment="center")
-
-        # -------- Plant Image --------
+        col_img, col_text = st.columns([2, 3])
         with col_img:
-            st.image(
-                plant_state["image_url"],
-                width=280,
-            )
-
-        # -------- Text Content --------
+            st.image(plant_state["image_url"], width=280)
         with col_text:
             st.markdown(f"### {plant_state['message']}")
             st.markdown(f"#### 🔥 Login Streak: **{plant_state['streak']} days**")
 
-            st.markdown("<br>", unsafe_allow_html=True)
-
             if plant_state.get("can_replant"):
-                if st.button("🌱 Plant seed again", type="secondary"):
-                    # 🔥 log real replant event
+                if st.button("🌱 Plant seed again"):
                     log_event("plant", "replanted")
-
-                    # 🔁 refresh backend-derived plant state
-                    st.session_state["_force_plant_refresh"] = datetime.now(IST).isoformat()
-
                     st.success("A new seed has been planted 🌱 Come back tomorrow!")
                     st.rerun()
-    else:
-        st.info("🌱 Your plant will appear once you start your journey!")
 
 st.divider()
 
-
 # ---------------- Guides ---------------- #
 st.subheader("📖 Feature Guides")
-
 cols = st.columns(len(FEATURE_GUIDES))
 
-for idx, (key, data) in enumerate(FEATURE_GUIDES.items()):
-    with cols[idx]:
-
-        if st.button(
-            f"🎯 {data['title']}\n\n{data['subtitle']}",
-            key=f"guide_btn_{key}",
-            use_container_width=True
-        ):
+for i, (key, data) in enumerate(FEATURE_GUIDES.items()):
+    with cols[i]:
+        if st.button(f"{data['title']}\n{data['subtitle']}", use_container_width=True):
             log_event("guides", "open_from_dashboard", {"guide": key})
             st.session_state.selected_guide = key
             st.switch_page("pages/guides.py")
 
 st.divider()
 
+# ---------------- Quiz ---------------- #
+quiz_resp = requests.get(f"{API_BASE_URL}/quizzes/status", headers=headers)
+quiz_completed = quiz_resp.json().get("completed", False) if quiz_resp.status_code == 200 else False
 
-
-# ---------------- Quiz Popup / Timer ---------------- #
-if quiz_completed:
-    st.subheader("⏳ Next Quiz Available In")
-
-    resp = requests.get(f"{API_BASE_URL}/quizzes/next-available", headers=headers)
-    if resp.status_code == 200:
-        remaining = resp.json()["seconds_remaining"]
-        timer = st.empty()
-
-        while remaining > 0:
-            h, r = divmod(remaining, 3600)
-            m, s = divmod(r, 60)
-            timer.metric("Next Daily Quiz", f"{h:02d}:{m:02d}:{s:02d}")
-            time.sleep(1)
-            remaining -= 1
-else:
+if not quiz_completed:
     with st.container(border=True):
         st.markdown("### 🎯 Daily Training Available")
-        st.write(f"Hello **{user['name']}**! Ready to earn points today?")
-        col1, col2 = st.columns([1, 4])
-
-        with col1:
-            if st.button("🚀 Start Quiz", type="primary", use_container_width=True):
-                log_event("dashboard", "start_quiz_click")
-                st.switch_page("pages/quizzes.py")
-
-        with col2:
-            if st.button("🕒 Maybe Later", use_container_width=True):
-                log_event("dashboard", "maybe_later_click")
-                st.rerun()
-
-st.divider()
+        st.caption("Complete today’s quiz to maintain your streak and earn bonus points.")
+        if st.button("🚀 Start Quiz", use_container_width=True):
+            log_event("dashboard", "start_quiz_click")
+            st.switch_page("pages/quizzes.py")
