@@ -167,15 +167,15 @@ if st.session_state.get("completed"):
     else:
         log_event("quiz", "submit_blocked", {"reason": "points_saved_guard"})
 
-    if st.button("Go to Dashboard"):
-        log_event("dashboard", "go_click")
-        for key in [
-            "quiz_questions",
-            "current_index",
-            "score",
-            "completed",
-            "points_saved",
-        ]:
-            st.session_state.pop(key, None)
+    # if st.button("Go to Dashboard"):
+    #     log_event("dashboard", "go_click")
+    #     for key in [
+    #         "quiz_questions",
+    #         "current_index",
+    #         "score",
+    #         "completed",
+    #         "points_saved",
+    #     ]:
+    #         st.session_state.pop(key, None)
 
-        st.switch_page("pages/dashboard.py")
+    #     st.switch_page("pages/dashboard.py")
