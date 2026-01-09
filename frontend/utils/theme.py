@@ -43,17 +43,19 @@ def apply_theme() -> None:
             background-color: #3a3a3a !important;
             color: #d1d1d1 !important;
         }
-        /* -------- GLOBAL CARD BORDER STYLE -------- */
-        [data-testid="stContainer"] > div {
-            border: 5px solid rgba(0,0,0,0.08) !important;
-            border-radius: 18px !important;
-            padding: 18px !important;
+        /* ---------- DEFAULT CARD STYLE ---------- */
+        .card {
+            border: 5px solid rgba(0,0,0,0.08);
+            border-radius: 18px;
+            padding: 18px;
+            background: #ffffff;
         }
 
-        /* -------- EXCLUDE BLACK & WHITE CARDS -------- */
+        /* ---------- EXCLUDE BLACK CARDS ---------- */
         .bw-card {
             border: none !important;
         }
+
         </style>
         """,
         unsafe_allow_html=True,
