@@ -18,49 +18,40 @@ IST = timezone("Asia/Kolkata")
 
 st.markdown("""
 <style>
+
 /* Sidebar background */
 section[data-testid="stSidebar"] {
-    background: #FF4B4B;
+    background-color: #FF4B4B;
 }
 
-/* Sidebar links */
-section[data-testid="stSidebar"] a {
+/* All sidebar text */
+section[data-testid="stSidebar"] * {
     color: white !important;
     font-weight: 600;
-    border-radius: 8px;
-    padding: 6px 10px;
+    letter-spacing: .3px;
 }
 
-/* Selected item */
+/* Sidebar nav links */
+section[data-testid="stSidebar"] a {
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 4px 6px;
+    display: block;
+}
+
+/* Active page */
 section[data-testid="stSidebar"] a[aria-selected="true"] {
-    background: rgba(255,255,255,0.18) !important;
+    background: rgba(255,255,255,0.25) !important;
 }
 
-/* Hover */
+/* Hover state */
 section[data-testid="stSidebar"] a:hover {
-    background: rgba(255,255,255,0.12) !important;
+    background: rgba(255,255,255,0.15);
 }
 
-/* Capitalize labels */
-section[data-testid="stSidebar"] a span {
-    text-transform: capitalize;
-}
+/* Hide Streamlit footer */
+footer { visibility: hidden; }
 
-/* Hide raw page filenames */
-section[data-testid="stSidebar"] a span:contains("streamlit_app") {
-    display: none;
-}
-
-/* Replace Home label cleanly */
-section[data-testid="stSidebar"] a[href*="streamlit_app"] span {
-    visibility: hidden;
-}
-section[data-testid="stSidebar"] a[href*="streamlit_app"]::after {
-    content: "Home Page";
-    color: white;
-    font-weight: 700;
-    margin-left: 10px;
-}
 </style>
 """, unsafe_allow_html=True)
 
