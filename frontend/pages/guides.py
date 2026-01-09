@@ -59,7 +59,7 @@ if other_tips:
     cols = st.columns(len(other_tips))
     for idx, (key, data) in enumerate(other_tips.items()):
         with cols[idx]:
-            card_label = f"🎯 {data['title']}\n{data['subtitle']}"
+            card_label = f"{data['title']}\n{data['subtitle']}"
 
             if st.button(
                 label=card_label,
