@@ -162,20 +162,17 @@ with st.container(border=True):
                     st.success("A new seed has been planted 🌱 Come back tomorrow!")
                     st.rerun()
 
-st.divider()
-
 # ---------------- Guides ---------------- #
-st.subheader("📖 Feature Guides")
-cols = st.columns(len(FEATURE_GUIDES))
+with st.container(border=True):
+    st.subheader("📖 Feature Guides")
+    cols = st.columns(len(FEATURE_GUIDES))
 
-for i, (key, data) in enumerate(FEATURE_GUIDES.items()):
-    with cols[i]:
-        if st.button(f"{data['title']}\n{data['subtitle']}", use_container_width=True):
-            log_event("guides", "open_from_dashboard", {"guide": key})
-            st.session_state.selected_guide = key
-            st.switch_page("pages/guides.py")
-
-st.divider()
+    for i, (key, data) in enumerate(FEATURE_GUIDES.items()):
+        with cols[i]:
+            if st.button(f"{data['title']}\n{data['subtitle']}", use_container_width=True):
+                log_event("guides", "open_from_dashboard", {"guide": key})
+                st.session_state.selected_guide = key
+                st.switch_page("pages/guides.py")
 
 # ---------------- Quiz ---------------- #
 quiz_resp = requests.get(f"{API_BASE_URL}/quizzes/status", headers=headers)
