@@ -81,85 +81,91 @@ st.divider()
 # ---------------- Metrics ---------------- #
 
 components.html(f"""
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
+
 <style>
 .metric-row {{
-    display:flex;
-    gap:20px;
-    width:100%;
-    margin-bottom:24px;
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  margin: 28px 0;
 }}
 
 .metric-card {{
-    font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
-                 "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  flex: 1;
+  padding: 26px;
+  border-radius: 20px;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.08);
+  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
 }}
 
 .bw-card {{
-    background:#0b0b0b;
-    color:white;
-}}
-
-.label {{
-    font-size:12px;
-    font-weight:700;
-    letter-spacing:0.04em;
-    opacity:0.7;
+  background: #0b0b0b;
+  color: white;
 }}
 
 .points {{
-    font-size:42px;
-    font-weight:800;
+  font-size: 44px;
+  font-weight: 800;
 }}
 
-.tier-card .title {{
-    font-size:12px;
-    font-weight:700;
-    color:#64748b;
-    letter-spacing:0.04em;
+.label {{
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.75;
+}}
+
+.rank {{
+  text-align: right;
 }}
 
 .tier {{
-    font-size:22px;
-    font-weight:800;
-    margin-top:4px;
+  font-size: 24px;
+  font-weight: 800;
+  margin-top: 6px;
 }}
-                
+
 .tier-body {{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    margin-top:14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
 }}
 </style>
 
 <div class="metric-row">
-    <div class="metric-card bw-card">
-        <div style="display:flex;justify-content:space-between;">
-            <div>
-                <div class="label">POINTS</div>
-                <div class="points">{points}</div>
-            </div>
-            <div style="text-align:right;">
-                <div class="label">RANK</div>
-                <div class="points" style="font-size:24px;">{rank}</div>
-            </div>
-        </div>
 
-        <div style="margin-top:12px;font-size:14px;opacity:0.85;">
-            Keep your streak — complete daily training to earn more points.
-        </div>
+  <div class="metric-card bw-card">
+    <div style="display:flex;justify-content:space-between">
+      <div>
+        <div class="label">POINTS</div>
+        <div class="points">{points}</div>
+      </div>
+      <div class="rank">
+        <div class="label">RANK</div>
+        <div class="points" style="font-size:28px">{rank_pos}</div>
+      </div>
     </div>
 
-    <div class="metric-card tier-card">
-        <div class="title">CURRENT TIER</div>
-        <div class="tier">{tier}</div>
-        <div class="tier-body">
-            <img src="{badge}" height="56"/>
-            <div style="font-size:13px;color:#475569;font-weight:600;">Membership</div>
-        </div>
+    <div style="margin-top:14px;font-size:14px;opacity:.85">
+      Keep your streak — complete daily training to earn more points.
     </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="label">CURRENT TIER</div>
+    <div class="tier">{tier}</div>
+    <div class="tier-body">
+      <img src="{badge or ''}" height="52"/>
+      <div style="font-size:14px;font-weight:600;color:#475569">
+        Membership
+      </div>
+    </div>
+  </div>
+
 </div>
-""", height=220)
+""", height=200)
 
 st.divider()
 
