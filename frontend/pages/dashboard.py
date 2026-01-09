@@ -43,16 +43,61 @@ badge = rank_data.get("badge_image") or ""
 st.markdown("## 👋 Welcome back")
 st.markdown(f"### **{user['name']}**")
 
-with st.container(border=True):
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("📍 **Location**")
-        st.markdown(user.get("loc_name", "—"))
-    with col2:
-        st.markdown("🛠️ **Role**")
-        st.markdown(user.get("role_name", "—"))
+components.html(f"""
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap">
+<style>
+* {{
+  font-family: 'Source Sans Pro' !important;
+}}
 
-st.divider()
+.info-row {{
+  display:flex;
+  gap:24px;
+  width:100%;
+  margin-top:24px;
+}}
+
+.info-card {{
+  flex:1;
+  padding:22px;
+  border-radius:18px;
+  background:#ffffff;
+  border:1px solid rgba(0,0,0,0.08);
+}}
+
+.bw {{
+  background:#0b0b0b;
+  color:white;
+}}
+
+.label {{
+  font-size:12px;
+  font-weight:700;
+  opacity:.65;
+  letter-spacing:.04em;
+}}
+
+.value {{
+  font-size:18px;
+  font-weight:700;
+  margin-top:4px;
+}}
+</style>
+
+<div class="info-row">
+
+  <div class="info-card bw">
+    <div class="label">LOCATION</div>
+    <div class="value">{user.get("loc_name","—")}</div>
+  </div>
+
+  <div class="info-card">
+    <div class="label">ROLE</div>
+    <div class="value">{user.get("role_name","—")}</div>
+  </div>
+
+</div>
+""", height=120)
 
 # ---------------- Metrics ---------------- #
 components.html(f"""
