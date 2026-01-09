@@ -2,6 +2,8 @@ from __future__ import annotations
 import streamlit as st
 import time
 import requests
+from datetime import datetime
+from pytz import timezone
 
 from utils.api_client import get_user_points
 from utils.events import log_event
@@ -12,6 +14,7 @@ from utils.ui_utils import FEATURE_GUIDES
 API_BASE_URL = "https://lab-gamification.onrender.com"
 
 st.set_page_config(page_title="Dashboard - Stomata Labs", page_icon="📊", layout="wide")
+IST = timezone("Asia/Kolkata")
 
 # ---------------- Security ---------------- #
 if not st.session_state.get("is_authenticated"):
