@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import streamlit as st
 import requests
-import pandas as pd
 
 from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
@@ -27,52 +26,62 @@ if resp.status_code != 200:
     st.error("Failed to load leaderboard.")
     st.stop()
 
-data = resp.json()
+rows = resp.json()
 
-if not data:
-    st.info("No leaderboard data available.")
-    st.stop()
-
-rows = []
-me_index = None
-
-for i, row in enumerate(data):
-    rows.append(
-        {
-            "Badge": row["badge_image"] or "—",
-            "Name": row["name"],
-            "Points": f'{row["points"]} pts',
-            "Rank": row["rank"] or "—",
-        }
-    )
-    if row["is_me"]:
-        me_index = i
-
-df = pd.DataFrame(rows)
-
-# ---------- Highlight current user ----------
-def highlight_me(row):
-    if row.name == me_index:
-        return ["background-color: rgba(0,0,0,0.06); font-weight:700"] * len(row)
-    return [""] * len(row)
-
-# ---------- Style outer card ----------
-st.markdown(
-    """
+# ---------- Card Wrapper ----------
+st.markdown("""
 <style>
-div[data-testid="stDataFrame"] {
+.lb-wrapper {
     border: 5px solid rgba(0,0,0,0.08);
     border-radius: 18px;
-    padding: 14px;
+    padding: 18px 10px;
     background: #ffffff;
 }
-</style>
-""",
-    unsafe_allow_html=True,
-)
 
-st.dataframe(
-    df.style.apply(highlight_me, axis=1),
-    use_container_width=True,
-    hide_index=True,
-)
+.lb-head, .lb-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 140px 120px;
+    padding: 10px 18px;
+    align-items: center;
+}
+
+.lb-head {
+    font-weight: 700;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.lb-row:not(:last-child) {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.lb-me {
+    background: rgba(0,0,0,0.05);
+    font-weight: 700;
+}
+</style>
+
+<div class="lb-wrapper">
+  <div class="lb-head">
+    <div>Badge</div><div>Name</div><div>Points</div><div>Rank</div>
+  </div>
+""", unsafe_allow_html=True)
+
+# ---------- Rows ----------
+for row in rows:
+    cls = "lb-row lb-me" if row["is_me"] else "lb-row"
+    badge = row["badge_image"]
+    badge_html = f"<img src='{badge}' width='36'>" if badge else "—"
+
+    st.markdown(
+        f"""
+        <div class="{cls}">
+            <div>{badge_html}</div>
+            <div>{row["name"]}</div>
+            <div>{row["points"]} pts</div>
+            <div>{row["rank"] or "—"}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+st.markdown("</div>", unsafe_allow_html=True)
