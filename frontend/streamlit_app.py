@@ -1,12 +1,10 @@
 import streamlit as st
 from utils.sessions import is_authenticated, get_access_token
 from utils.events import log_event
-from utils.theme import apply_theme
 import requests
 
 API = "https://lab-gamification.onrender.com"
 
-apply_theme()
 
 st.set_page_config(
     page_title="Stomata Labs Gamification",
