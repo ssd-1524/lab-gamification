@@ -54,9 +54,15 @@ st.markdown("""
 }
 
 .lb-me {
-    background: rgba(0,0,0,0.05);
-    font-weight: 700;
+    background: #0b0b0b;
+    color: #ffffff;
+    font-weight: 800;
 }
+
+.lb-me div {
+    color: #ffffff !important;
+}
+
 </style>
 
 <div class="lb-wrapper">
