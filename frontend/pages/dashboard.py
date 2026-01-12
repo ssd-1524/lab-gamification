@@ -39,36 +39,26 @@ rank = rank_data.get("position", "—")
 tier = rank_data.get("rank", "—")
 badge = rank_data.get("badge_image") or ""
 logo = "https://hznnpqggqowmaodldfjb.supabase.co/storage/v1/object/public/images/stoma.png"
-
 # ---------------- Header ---------------- #
 st.markdown(f"""
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&display=swap">
-
 <div style="
-    display:flex;
-    align-items:center;
-    gap:14px;
     margin-top:6px;
     margin-bottom:22px;
-    font-family:'Source Sans Pro', sans-serif !important;
+    font-family:'Source Sans Pro' !important;
 ">
-    <img src="{logo}" alt="Stomata Labs Logo"
+  <img src="{logo}" alt="Stomata Labs Logo"
          style="
             width:46px;
             height:46px;
-            border-radius:50%;
-            border:2px solid rgba(0,0,0,0.15);
             object-fit:cover;
          "/>
-
-    <div>
-        <div style="font-size:13px;font-weight:600;color:#64748b;letter-spacing:.04em;">
-            WELCOME
-        </div>
-        <div style="font-size:34px;font-weight:800;color:#0f172a;margin-top:2px;">
-            {user['name']}
-        </div>
-    </div>
+  <div style="font-size:13px; font-weight:600; color:#64748b; letter-spacing:.04em;">
+    WELCOME
+  </div>
+  <div style="font-size:34px; font-weight:800; color:#0f172a; margin-top:4px;">
+    {user['name']}
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
