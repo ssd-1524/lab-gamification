@@ -46,10 +46,10 @@ if is_authenticated():
 st.markdown("""
 <div style="display:flex;justify-content:center;margin-bottom:16px;">
     <img src="https://hznnpqggqowmaodldfjb.supabase.co/storage/v1/object/public/images/stomatalabs.png" alt="Stomata Labs Logo"
-         style="height:90px;object-fit:contain;" />
+         style="height:200px;object-fit:contain;" />
 </div>
 """, unsafe_allow_html=True)
-st.title("🌱 Welcome to Stomata Labs")
+st.title("Welcome to Stomata Labs")
 st.subheader("Unlock the Agro-Industrial Potential of the Sugar Industry with AI")
 
 if st.session_state.is_authenticated:
