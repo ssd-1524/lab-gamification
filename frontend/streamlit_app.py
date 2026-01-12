@@ -8,7 +8,7 @@ API = "https://lab-gamification.onrender.com"
 
 st.set_page_config(
     page_title="Stomata Labs Gamification",
-    page_icon="🌱",
+    page_icon="https://hznnpqggqowmaodldfjb.supabase.co/storage/v1/object/public/images/stoma.png",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
@@ -42,40 +42,13 @@ if is_authenticated():
     except:
         pass
 
-    with st.sidebar:
-        st.markdown("## 🧪 Stomata Labs")
-
-        if st.button("📊 Dashboard"):
-            log_event("sidebar", "dashboard_click")
-            st.switch_page("pages/dashboard.py")
-
-        if st.button("🧪 Daily Quiz"):
-            log_event("sidebar", "quiz_click")
-            st.switch_page("pages/quizzes.py")
-
-        if st.button("🏆 Leaderboard"):
-            log_event("sidebar", "leaderboard_click")
-            st.switch_page("pages/leaderboard.py")
-
-        if st.button("📖 Guides"):
-            log_event("sidebar", "guides_click")
-            st.switch_page("pages/guides.py")
-
-        if st.button("👤 Profile"):
-            log_event("sidebar", "profile_click")
-            st.switch_page("pages/profile.py")
-
-        if plan in ("Prime", "Nexus"):
-            if st.button("🚨 Anomaly Detection"):
-                log_event("sidebar", "anomaly_click")
-                st.switch_page("pages/anomaly_detection.py")
-
-        if plan == "Nexus":
-            if st.button("⚙️ Optimizer"):
-                log_event("sidebar", "optimizer_click")
-                st.switch_page("pages/optimizer.py")
-
 # -------- Main Page -------- #
+st.markdown("""
+<div style="display:flex;justify-content:center;margin-bottom:16px;">
+    <img src="https://hznnpqggqowmaodldfjb.supabase.co/storage/v1/object/public/images/stomatalabs.png" alt="Stomata Labs Logo"
+         style="height:90px;object-fit:contain;" />
+</div>
+""", unsafe_allow_html=True)
 st.title("🌱 Welcome to Stomata Labs")
 st.subheader("Unlock the Agro-Industrial Potential of the Sugar Industry with AI")
 
