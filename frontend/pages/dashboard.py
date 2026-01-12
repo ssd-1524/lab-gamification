@@ -49,9 +49,8 @@ st.markdown(f"""
 ">
   <img src="{logo}" alt="Stomata Labs Logo"
          style="
-            width:46px;
-            height:46px;
-            object-fit:cover;
+            width:50px;
+            height:50px;
          "/>
   <div style="font-size:13px; font-weight:600; color:#64748b; letter-spacing:.04em;">
     WELCOME
