@@ -38,6 +38,7 @@ points = rank_data.get("points", 0)
 rank = rank_data.get("position", "—")
 tier = rank_data.get("rank", "—")
 badge = rank_data.get("badge_image") or ""
+logo = "https://hznnpqggqowmaodldfjb.supabase.co/storage/v1/object/public/images/stoma.png"
 
 # ---------------- Header ---------------- #
 st.markdown(f"""
@@ -51,7 +52,7 @@ st.markdown(f"""
     margin-bottom:22px;
     font-family:'Source Sans Pro', sans-serif !important;
 ">
-    <img src="https://hznnpqggqowmaodldfjb.supabase.co/storage/v1/object/public/images/stoma.png"
+    <img src="{logo}" alt="Stomata Labs Logo"
          style="
             width:46px;
             height:46px;
