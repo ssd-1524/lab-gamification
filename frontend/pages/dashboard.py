@@ -158,7 +158,7 @@ with st.container(border=True):
 
             if plant_state.get("can_replant"):
                 if st.button("🌱 Plant seed again"):
-                    log_event("plant", "replanted")
+                    log_event("plant", "replant_clicked")
                     st.success("A new seed has been planted 🌱 Come back tomorrow!")
                     st.rerun()
 
